@@ -1,0 +1,12 @@
+name = "words"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "words-db"
+database_id = "placeholder-fill-after-wrangler-d1-create"
+migrations_dir = "db/migrations"
+
+[vars]
+# Add environment variables here if needed

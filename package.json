@@ -1,0 +1,43 @@
+{
+  "name": "words",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev:vite": "vite",
+    "dev:worker": "wrangler pages dev --proxy 5173",
+    "dev": "concurrently -k -n vite,worker -c cyan,yellow \"npm run dev:vite\" \"npm run dev:worker\"",
+    "build": "vite build",
+    "preview": "wrangler pages dev dist",
+    "test": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "jszip": "^3.10.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "sql.js": "^1.12.0",
+    "drizzle-orm": "^0.36.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/sql.js": "^1.4.9",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.1.0",
+    "drizzle-kit": "^0.28.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vite-plugin-pwa": "^0.21.0",
+    "vitest": "^2.1.4",
+    "wrangler": "^3.86.0"
+  }
+}
