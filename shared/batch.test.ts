@@ -12,6 +12,8 @@ function makeWord(overrides: Partial<Word> = {}): Word {
     levelTag: null,
     categoryTag: null,
     notes: null,
+    example: null,
+    exampleTranslation: null,
     createdAt: Date.now(),
     timesSeenInExam: 0,
     timesCorrectInExam: 0,

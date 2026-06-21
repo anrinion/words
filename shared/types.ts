@@ -15,6 +15,8 @@ export interface Word {
   levelTag: string | null
   categoryTag: string | null
   notes: string | null
+  example: string | null
+  exampleTranslation: string | null
   createdAt: number
   timesSeenInExam: number
   timesCorrectInExam: number
@@ -98,11 +100,14 @@ export interface DeckStats {
 }
 
 export interface ParsedWord {
+  id?: string // client-generated UUID; used by Anki adapter for audio indexing
   term: string
   translation: string
   levelTag?: string
   categoryTag?: string
   notes?: string
+  example?: string
+  exampleTranslation?: string
 }
 
 export interface ParseResult {
@@ -113,5 +118,6 @@ export interface ParseResult {
 export interface ImportResult {
   imported: number
   duplicates: number
+  skippedDuplicates: string[]
   rejected: { line: string; reason: string }[]
 }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { wordsApi } from '../api/words'
 import type { Deck, Word, ParsedWord, ImportResult } from '@shared/types'
+import AudioButton from '../components/AudioButton'
 import { textPasteAdapter } from '../importAdapters/textPaste'
 import { fileAdapter } from '../importAdapters/file'
 import { ankiPackageAdapter } from '../importAdapters/ankiPackage'
@@ -55,6 +56,17 @@ export default function WordBank() {
     setWords((prev) => prev.filter((w) => w.id !== id))
   }
 
+  async function handleDeleteAll() {
+    if (!confirm(`Delete all ${words.length} words? This cannot be undone.`)) return
+    await wordsApi.deleteAll(deck.id)
+    setWords([])
+  }
+
+  async function handleClearWeak(id: string) {
+    await wordsApi.update(deck.id, id, { weak: 0 })
+    setWords((prev) => prev.map((w) => w.id === id ? { ...w, weak: 0 } : w))
+  }
+
   async function handleSave(id: string, body: Partial<ParsedWord>) {
     await wordsApi.update(deck.id, id, body)
     setEditWord(null)
@@ -88,25 +100,21 @@ export default function WordBank() {
           Import
         </button>
         <button
-          onClick={() => setEditWord({ id: '', deckId: deck.id, term: '', translation: '', levelTag: null, categoryTag: null, notes: null, createdAt: 0, timesSeenInExam: 0, timesCorrectInExam: 0, timesWrongInExam: 0, streak: 0, weak: 0, lastSeenAt: null })}
+          onClick={() => setEditWord({ id: '', deckId: deck.id, term: '', translation: '', levelTag: null, categoryTag: null, notes: null, example: null, exampleTranslation: null, createdAt: 0, timesSeenInExam: 0, timesCorrectInExam: 0, timesWrongInExam: 0, streak: 0, weak: 0, lastSeenAt: null })}
           className="btn-secondary text-sm flex-1"
         >
           + Add word
         </button>
+        {words.length > 0 && (
+          <button onClick={handleDeleteAll} className="text-red-400 hover:text-red-600 text-sm px-2">
+            Delete all
+          </button>
+        )}
       </div>
 
       {/* Import result banner */}
       {importResult && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 text-sm text-green-800">
-          <p>
-            Imported <strong>{importResult.imported}</strong> words
-            {importResult.duplicates > 0 && `, ${importResult.duplicates} duplicates skipped`}
-            {importResult.rejected.length > 0 && `, ${importResult.rejected.length} lines rejected`}
-          </p>
-          <button onClick={() => setImportResult(null)} className="text-green-600 underline text-xs mt-1">
-            Dismiss
-          </button>
-        </div>
+        <ImportResultBanner result={importResult} onDismiss={() => setImportResult(null)} />
       )}
 
       {/* Empty states */}
@@ -126,7 +134,8 @@ export default function WordBank() {
             className="bg-white border border-slate-200 rounded-lg px-3 py-2.5 flex items-start gap-2"
           >
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <AudioButton wordId={word.id} type="word" />
                 <span className="font-medium text-slate-800 text-sm">{word.term}</span>
                 {word.weak === 1 && (
                   <span className="text-xs bg-red-100 text-red-600 px-1.5 rounded-full">weak</span>
@@ -138,6 +147,12 @@ export default function WordBank() {
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">{word.translation}</p>
+              {word.example && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <AudioButton wordId={word.id} type="example" />
+                  <p className="text-xs text-slate-400 italic truncate">{word.example}</p>
+                </div>
+              )}
               {(word.levelTag || word.categoryTag) && (
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {word.levelTag && (
@@ -150,6 +165,11 @@ export default function WordBank() {
               )}
             </div>
             <div className="flex gap-1 shrink-0">
+              {word.weak === 1 && (
+                <button onClick={() => handleClearWeak(word.id)} className="text-orange-400 hover:text-orange-600 text-xs p-1" title="Remove from weak">
+                  ✓
+                </button>
+              )}
               <button onClick={() => setEditWord(word)} className="text-slate-400 hover:text-slate-600 text-xs p-1">
                 Edit
               </button>
@@ -206,6 +226,46 @@ export default function WordBank() {
   )
 }
 
+function ImportResultBanner({ result, onDismiss }: { result: ImportResult; onDismiss: () => void }) {
+  const [showDuplicates, setShowDuplicates] = useState(false)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 text-sm text-green-800">
+      <p>
+        Imported <strong>{result.imported}</strong> words
+        {result.duplicates > 0 && (
+          <>
+            {', '}
+            <button
+              onClick={() => setShowDuplicates((v) => !v)}
+              className="underline font-medium"
+            >
+              {result.duplicates} duplicates skipped {showDuplicates ? '▲' : '▼'}
+            </button>
+          </>
+        )}
+        {result.rejected.length > 0 && `, ${result.rejected.length} lines rejected`}
+      </p>
+
+      {showDuplicates && (
+        <div
+          ref={listRef}
+          className="mt-2 max-h-40 overflow-y-auto bg-white border border-green-100 rounded p-2 space-y-0.5"
+        >
+          {result.skippedDuplicates.map((term, i) => (
+            <p key={i} className="text-xs text-slate-500 font-mono truncate">{term}</p>
+          ))}
+        </div>
+      )}
+
+      <button onClick={onDismiss} className="text-green-600 underline text-xs mt-1.5 block">
+        Dismiss
+      </button>
+    </div>
+  )
+}
+
 function EditWordModal({
   word,
   isNew,
@@ -219,13 +279,23 @@ function EditWordModal({
 }) {
   const [term, setTerm] = useState(word.term)
   const [translation, setTranslation] = useState(word.translation)
+  const [example, setExample] = useState(word.example ?? '')
+  const [exampleTranslation, setExampleTranslation] = useState(word.exampleTranslation ?? '')
   const [levelTag, setLevelTag] = useState(word.levelTag ?? '')
   const [categoryTag, setCategoryTag] = useState(word.categoryTag ?? '')
   const [notes, setNotes] = useState(word.notes ?? '')
 
   function submit() {
     if (term.trim() && translation.trim()) {
-      onSave({ term, translation, levelTag: levelTag || undefined, categoryTag: categoryTag || undefined, notes: notes || undefined })
+      onSave({
+        term,
+        translation,
+        example: example || undefined,
+        exampleTranslation: exampleTranslation || undefined,
+        levelTag: levelTag || undefined,
+        categoryTag: categoryTag || undefined,
+        notes: notes || undefined,
+      })
     }
   }
 
@@ -235,12 +305,12 @@ function EditWordModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
           <h2 className="font-semibold text-slate-800">{isNew ? 'Add word' : 'Edit word'}</h2>
           <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
         </div>
-        <div className="space-y-3">
+        <div className="overflow-y-auto p-5 space-y-3 flex-1">
           <div>
             <label className="text-xs text-slate-500 mb-1 block">Term</label>
             <input autoFocus value={term} onChange={(e) => setTerm(e.target.value)} onKeyDown={onEnter} className="input" />
@@ -248,6 +318,14 @@ function EditWordModal({
           <div>
             <label className="text-xs text-slate-500 mb-1 block">Translation</label>
             <input value={translation} onChange={(e) => setTranslation(e.target.value)} onKeyDown={onEnter} className="input" />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Example sentence</label>
+            <input value={example} onChange={(e) => setExample(e.target.value)} onKeyDown={onEnter} className="input" placeholder="Optional" />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">Example translation</label>
+            <input value={exampleTranslation} onChange={(e) => setExampleTranslation(e.target.value)} onKeyDown={onEnter} className="input" placeholder="Optional" />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -263,7 +341,9 @@ function EditWordModal({
             <label className="text-xs text-slate-500 mb-1 block">Notes</label>
             <input value={notes} onChange={(e) => setNotes(e.target.value)} onKeyDown={onEnter} className="input" />
           </div>
-          <button type="button" onClick={submit} className={`btn-primary w-full mt-1 ${!term.trim() || !translation.trim() ? 'opacity-40 pointer-events-none' : ''}`}>
+        </div>
+        <div className="p-5 border-t border-slate-100 shrink-0">
+          <button type="button" onClick={submit} className={`btn-primary w-full ${!term.trim() || !translation.trim() ? 'opacity-40 pointer-events-none' : ''}`}>
             {isNew ? 'Add' : 'Save'}
           </button>
         </div>

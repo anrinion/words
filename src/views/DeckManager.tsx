@@ -62,13 +62,13 @@ export default function DeckManager() {
         {decks.map((deck) => (
           <div
             key={deck.id}
-            className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3"
+            className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3 hover:border-slate-300 hover:shadow-sm transition-all"
           >
             <button
-              className="flex-1 text-left min-w-0"
+              className="flex-1 text-left min-w-0 group"
               onClick={() => navigate(`/deck/${deck.id}/train`)}
             >
-              <p className="font-semibold text-slate-800 truncate">{deck.name}</p>
+              <p className="font-semibold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{deck.name}</p>
               <p className="text-xs text-slate-400 mt-0.5">
                 {deck.targetLanguage} → {deck.nativeLanguage}
               </p>
@@ -77,7 +77,7 @@ export default function DeckManager() {
               onClick={() => setModal({ type: 'rename', deck })}
               className="text-slate-400 hover:text-slate-600 text-sm px-2 py-1"
             >
-              Edit
+              Rename
             </button>
             <button
               onClick={() => setModal({ type: 'delete', deck })}

@@ -1,4 +1,5 @@
 import type { Word } from '@shared/types'
+import AudioButton from '../../components/AudioButton'
 
 export default function Preview({ batch, onContinue }: { batch: Word[]; onContinue: () => void }) {
   return (
@@ -10,12 +11,25 @@ export default function Preview({ batch, onContinue }: { batch: Word[]; onContin
         </p>
       </div>
 
-      <div className="space-y-2 mb-6">
+      <div className="space-y-1.5 mb-6">
         {batch.map((word) => (
-          <div key={word.id} className="flex gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2.5">
-            <span className="font-medium text-slate-800 text-sm min-w-0 flex-1">{word.term}</span>
-            <span className="text-slate-400 text-sm">—</span>
-            <span className="text-slate-600 text-sm min-w-0 flex-1 text-right">{word.translation}</span>
+          <div key={word.id} className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <AudioButton wordId={word.id} type="word" />
+              <p className="font-medium text-slate-800 text-sm">{word.term}</p>
+            </div>
+            <p className="text-slate-500 text-sm mt-0.5">{word.translation}</p>
+            {word.example && (
+              <div className="mt-1.5 border-t border-slate-100 pt-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AudioButton wordId={word.id} type="example" />
+                  <p className="text-slate-500 text-xs italic">{word.example}</p>
+                </div>
+                {word.exampleTranslation && (
+                  <p className="text-slate-400 text-xs mt-0.5 ml-4">{word.exampleTranslation}</p>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

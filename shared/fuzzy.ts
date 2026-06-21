@@ -44,6 +44,21 @@ export function matches(
   return levenshtein(a, b) <= tol
 }
 
+// If input is a single word and term contains multiple tokens (e.g. "das Haus, -ä, er"),
+// accept if the input fuzzy-matches any individual token.
+export function matchesAnyToken(
+  input: string,
+  term: string,
+  bands: ToleranceBand[] = DEFAULT_TOLERANCE_BANDS,
+): boolean {
+  const trimmed = input.trim()
+  if (!trimmed.includes(' ')) {
+    const tokens = term.split(/[\s,;]+/).map((t) => t.replace(/^-/, '').trim()).filter(Boolean)
+    if (tokens.length > 1) return tokens.some((token) => matches(trimmed, token, bands))
+  }
+  return matches(trimmed, term, bands)
+}
+
 export function gradeLabel(
   scorePct: number,
   gradeBands: { minScore: number; label: string }[],

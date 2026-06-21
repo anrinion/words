@@ -29,6 +29,7 @@ export default function Progress() {
   const mastered = words.filter((w) => isMastered(w, masteryThreshold)).length
   const weak = words.filter((w) => w.weak === 1).length
   const neverSeen = words.filter((w) => w.lastSeenAt === null).length
+  const learning = total - mastered - weak - neverSeen
 
   const avgScore =
     sessions.length > 0
@@ -40,8 +41,9 @@ export default function Progress() {
       {/* Dashboard */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <StatCard label="Total words" value={total} />
-        <StatCard label="Mastered" value={mastered} color="text-green-600" />
+        <StatCard label={`Mastered (${masteryThreshold}× correct)`} value={mastered} color="text-green-600" />
         <StatCard label="Weak" value={weak} color="text-red-500" />
+        <StatCard label="Learning" value={learning} color="text-blue-500" />
         <StatCard label="Never seen" value={neverSeen} color="text-slate-400" />
       </div>
 

@@ -6,7 +6,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
 import { drizzle } from 'drizzle-orm/d1'
 import { eq, and, isNull } from 'drizzle-orm'
 import * as schema from '../../db/schema'
-import { matches, gradeLabel } from '../../shared/fuzzy'
+import { matchesAnyToken, gradeLabel } from '../../shared/fuzzy'
 import { selectBatch, isMastered } from '../../shared/batch'
 import type { Settings, SessionData, ParsedWord } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/types'
@@ -294,6 +294,8 @@ app.post('/api/decks/:deckId/words', async (c) => {
     levelTag: body.levelTag?.trim() ?? null,
     categoryTag: body.categoryTag?.trim() ?? null,
     notes: body.notes?.trim() ?? null,
+    example: body.example?.trim() ?? null,
+    exampleTranslation: body.exampleTranslation?.trim() ?? null,
     createdAt: Date.now(),
     timesSeenInExam: 0,
     timesCorrectInExam: 0,
@@ -312,14 +314,26 @@ app.patch('/api/decks/:deckId/words/:id', async (c) => {
   const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
   if (!deck) return c.json({ error: 'Not found' }, 404)
 
-  const body = await c.req.json<Partial<ParsedWord>>()
-  const updates: Record<string, string | null> = {}
+  const body = await c.req.json<Partial<ParsedWord> & { weak?: number }>()
+  const updates: Record<string, string | number | null> = {}
   if (body.term !== undefined) updates.term = body.term.trim()
   if (body.translation !== undefined) updates.translation = body.translation.trim()
   if (body.levelTag !== undefined) updates.levelTag = body.levelTag?.trim() ?? null
   if (body.categoryTag !== undefined) updates.categoryTag = body.categoryTag?.trim() ?? null
   if (body.notes !== undefined) updates.notes = body.notes?.trim() ?? null
+  if (body.example !== undefined) updates.example = body.example?.trim() ?? null
+  if (body.exampleTranslation !== undefined) updates.exampleTranslation = body.exampleTranslation?.trim() ?? null
+  if (body.weak !== undefined) updates.weak = body.weak
   await db(c.env).update(schema.words).set(updates).where(eq(schema.words.id, id))
+  return c.json({ ok: true })
+})
+
+app.delete('/api/decks/:deckId/words', async (c) => {
+  const userId = c.get('userId')
+  const { deckId } = c.req.param()
+  const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
+  if (!deck) return c.json({ error: 'Not found' }, 404)
+  await db(c.env).delete(schema.words).where(eq(schema.words.deckId, deckId))
   return c.json({ ok: true })
 })
 
@@ -345,18 +359,20 @@ app.post('/api/decks/:deckId/words/import', async (c) => {
   const existingTerms = new Set(existing.map((w) => w.term.toLowerCase()))
 
   let imported = 0
-  let duplicates = 0
+  const skippedDuplicates: string[] = []
   const toInsert = []
 
   for (const w of body.words) {
     const term = w.term.trim()
-    if (existingTerms.has(term.toLowerCase())) { duplicates++; continue }
+    if (existingTerms.has(term.toLowerCase())) { skippedDuplicates.push(term); continue }
     toInsert.push({
-      id: nanoid(), deckId, term,
+      id: w.id ?? nanoid(), deckId, term,
       translation: w.translation.trim(),
       levelTag: w.levelTag?.trim() ?? null,
       categoryTag: w.categoryTag?.trim() ?? null,
       notes: w.notes?.trim() ?? null,
+      example: w.example?.trim() ?? null,
+      exampleTranslation: w.exampleTranslation?.trim() ?? null,
       createdAt: Date.now(),
       timesSeenInExam: 0, timesCorrectInExam: 0, timesWrongInExam: 0,
       streak: 0, weak: 0, lastSeenAt: null,
@@ -374,7 +390,7 @@ app.post('/api/decks/:deckId/words/import', async (c) => {
     )
   }
 
-  return c.json({ imported, duplicates, rejected: body.rejected ?? [] })
+  return c.json({ imported, duplicates: skippedDuplicates.length, skippedDuplicates, rejected: body.rejected ?? [] })
 })
 
 // ── Batch ────────────────────────────────────────────────────────────────────
@@ -443,7 +459,7 @@ app.post('/api/decks/:deckId/sessions', async (c) => {
   const answers = data.exam.answers.map((a) => {
     const word = wordMap.get(a.wordId)
     if (!word) return { ...a, matched: false }
-    return { ...a, matched: matches(a.rawInput, word.term, settings.fuzzyToleranceBands) }
+    return { ...a, matched: matchesAnyToken(a.rawInput, word.term, settings.fuzzyToleranceBands) }
   })
 
   const correctCount = answers.filter((a) => a.matched).length

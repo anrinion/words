@@ -19,6 +19,8 @@ export const words = sqliteTable('words', {
   levelTag: text('level_tag'),
   categoryTag: text('category_tag'),
   notes: text('notes'),
+  example: text('example'),
+  exampleTranslation: text('example_translation'),
   createdAt: integer('created_at').notNull(),
   timesSeenInExam: integer('times_seen_in_exam').notNull().default(0),
   timesCorrectInExam: integer('times_correct_in_exam').notNull().default(0),
