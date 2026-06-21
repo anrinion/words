@@ -1,7 +1,23 @@
 @import "tailwindcss";
 
-/* Safe area insets for notched phones */
+/* Theme CSS variables — defaults match the neutral theme */
 :root {
+  --app-bg: #ffffff;
+  --surface: #ffffff;
+  --surface2: #f6f6f3;
+  --ink: #15171c;
+  --ink-soft: #565b64;
+  --ink-faint: #9a9ea7;
+  --border: #ecebe7;
+  --pop: #2f63ff;
+  --pop-ink: #ffffff;
+  --pop-soft: #edf2ff;
+  --radius: 12px;
+  --radius-sm: 9px;
+  --font-head: 'Schibsted Grotesk', sans-serif;
+  --font-body: 'Schibsted Grotesk', sans-serif;
+
+  /* Safe area insets for notched phones */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --sal: env(safe-area-inset-left);
@@ -10,19 +26,58 @@
 
 body {
   overscroll-behavior: none;
+  background: var(--app-bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes popUp {
+  from { opacity: 0; transform: translateY(6px) scale(.99); }
+  to   { opacity: 1; transform: none; }
 }
 
 @layer components {
   .input {
-    @apply w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent;
+    @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+  .input:focus {
+    border-color: var(--pop);
+    box-shadow: 0 0 0 3px var(--pop-soft);
   }
   .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+    @apply font-semibold py-2 px-4 transition-colors;
+    background: var(--pop);
+    color: var(--pop-ink);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
   }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg transition-colors;
+    @apply font-semibold py-2 px-4 transition-colors;
+    background: var(--surface2);
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
   }
+  .btn-secondary:hover { filter: brightness(0.97); }
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  /* Themed card surface */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
 }

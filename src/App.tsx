@@ -7,6 +7,7 @@ import Train from './views/Train'
 import Progress from './views/Progress'
 import Login from './views/Login'
 import { authApi } from './api/auth'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 export default function App() {
   // undefined = loading, null = not logged in, string = email
@@ -20,9 +21,10 @@ export default function App() {
 
   if (user === undefined) return null
 
-  if (user === null) return <Login onLogin={setUser} />
+  if (user === null) return <ThemeProvider><Login onLogin={setUser} /></ThemeProvider>
 
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DeckManager />} />
@@ -35,5 +37,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ThemeProvider>
   )
 }
