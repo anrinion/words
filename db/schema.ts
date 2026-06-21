@@ -45,3 +45,22 @@ export const settings = sqliteTable('settings', {
   userId: text('user_id').notNull(),
   data: text('data').notNull(), // JSON blob of Settings
 })
+
+export const otps = sqliteTable('otps', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  code: text('code').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+  used: integer('used').notNull().default(0),
+})
+
+export const authSessions = sqliteTable('auth_sessions', {
+  token: text('token').primaryKey(),
+  email: text('email').notNull(),
+  expiresAt: integer('expires_at').notNull(),
+})
+
+export const bannedEmails = sqliteTable('banned_emails', {
+  email: text('email').primaryKey(),
+  bannedAt: integer('banned_at').notNull(),
+})

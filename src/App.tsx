@@ -1,11 +1,27 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import DeckManager from './views/DeckManager'
 import DeckLayout from './views/DeckLayout'
 import WordBank from './views/WordBank'
 import Train from './views/Train'
 import Progress from './views/Progress'
+import Login from './views/Login'
+import { authApi } from './api/auth'
 
 export default function App() {
+  // undefined = loading, null = not logged in, string = email
+  const [user, setUser] = useState<string | null | undefined>(undefined)
+
+  useEffect(() => {
+    authApi.me()
+      .then(({ email }) => setUser(email))
+      .catch(() => setUser(null))
+  }, [])
+
+  if (user === undefined) return null
+
+  if (user === null) return <Login onLogin={setUser} />
+
   return (
     <BrowserRouter>
       <Routes>

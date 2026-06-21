@@ -6,14 +6,21 @@
       "idx": 0,
       "version": "6",
       "when": 1781990709962,
-      "tag": "0000_jittery_wraith",
+      "tag": "0000_initial_schema",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
       "when": 1781991867833,
-      "tag": "0001_silly_randall",
+      "tag": "0001_sessions_cascade_delete",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782047256505,
+      "tag": "0002_auth_tables",
       "breakpoints": true
     }
   ]
