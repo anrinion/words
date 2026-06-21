@@ -8,7 +8,7 @@ export const wordsApi = {
   },
   create: (deckId: string, body: ParsedWord) =>
     api.post<Word>(`/api/decks/${deckId}/words`, body),
-  update: (deckId: string, id: string, body: Partial<ParsedWord> & { weak?: number }) =>
+  update: (deckId: string, id: string, body: Partial<ParsedWord> & { weak?: number; streak?: number }) =>
     api.patch<{ ok: boolean }>(`/api/decks/${deckId}/words/${id}`, body),
   remove: (deckId: string, id: string) =>
     api.delete<{ ok: boolean }>(`/api/decks/${deckId}/words/${id}`),

@@ -5,6 +5,7 @@ import { shuffleDifferentFrom } from '@shared/batch'
 import { batchApi } from '../../api/batch'
 import { sessionsApi } from '../../api/sessions'
 import { settingsApi } from '../../api/settings'
+import { wordsApi } from '../../api/words'
 import Preview from './Preview'
 import RoundView from './RoundView'
 import SelfCheck from './SelfCheck'
@@ -119,6 +120,20 @@ export default function Train() {
       }
 
       return { ...prev, session: updated }
+    })
+  }
+
+  async function handleEditWord(wordId: string, updates: { term: string; translation: string }) {
+    await wordsApi.update(deck.id, wordId, updates)
+    setState((prev) => {
+      if (prev.status !== 'running') return prev
+      return {
+        ...prev,
+        session: {
+          ...prev.session,
+          batch: prev.session.batch.map((w) => w.id === wordId ? { ...w, ...updates } : w),
+        },
+      }
     })
   }
 
@@ -255,7 +270,7 @@ export default function Train() {
 
       <div className="flex-1 overflow-y-auto">
         {phase === 'preview' && (
-          <Preview batch={batch} onContinue={() => advance()} />
+          <Preview batch={batch} onContinue={() => advance()} onEditWord={handleEditWord} />
         )}
 
         {isIndexed(phase) && phase.type === 'round' && (
@@ -270,6 +285,7 @@ export default function Train() {
           <SelfCheck
             batch={batch}
             checkNumber={phase.index + 1}
+            onEditWord={handleEditWord}
             onDone={(checkedIds) => {
               const rounds = [...session.rounds]
               rounds[phase.index] = { ...rounds[phase.index], selfCheckedIds: checkedIds }
@@ -289,6 +305,7 @@ export default function Train() {
           <Result
             batch={batch}
             result={session.result}
+            deckId={deck.id}
             onDone={() => setState({ status: 'idle' })}
             onAgain={() => startSession(state.mode)}
           />

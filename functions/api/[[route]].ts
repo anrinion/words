@@ -314,7 +314,7 @@ app.patch('/api/decks/:deckId/words/:id', async (c) => {
   const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
   if (!deck) return c.json({ error: 'Not found' }, 404)
 
-  const body = await c.req.json<Partial<ParsedWord> & { weak?: number }>()
+  const body = await c.req.json<Partial<ParsedWord> & { weak?: number; streak?: number }>()
   const updates: Record<string, string | number | null> = {}
   if (body.term !== undefined) updates.term = body.term.trim()
   if (body.translation !== undefined) updates.translation = body.translation.trim()
@@ -324,6 +324,7 @@ app.patch('/api/decks/:deckId/words/:id', async (c) => {
   if (body.example !== undefined) updates.example = body.example?.trim() ?? null
   if (body.exampleTranslation !== undefined) updates.exampleTranslation = body.exampleTranslation?.trim() ?? null
   if (body.weak !== undefined) updates.weak = body.weak
+  if (body.streak !== undefined) updates.streak = body.streak
   await db(c.env).update(schema.words).set(updates).where(eq(schema.words.id, id))
   return c.json({ ok: true })
 })

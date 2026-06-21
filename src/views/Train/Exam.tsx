@@ -11,57 +11,57 @@ export default function Exam({
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
 
+  const emptyCount = order.filter((w) => !(answers[w.id] ?? '').trim()).length
+
   function handleSubmit() {
     if (submitted) return
     setSubmitted(true)
     onSubmit(answers)
   }
 
-  const allFilled = order.every((w) => (answers[w.id] ?? '').trim().length > 0)
-
   return (
     <div className="p-4">
       <div className="mb-4">
         <h2 className="text-lg font-bold text-slate-800">Exam</h2>
         <p className="text-sm text-slate-500">
-          Type the term for each translation. Fill all {order.length} rows, then submit.
+          Type the term for each translation. Submit when ready.
         </p>
       </div>
 
-      <div className="space-y-2 mb-6">
+      <div className="space-y-1.5 mb-6">
         {order.map((word, i) => (
-          <div key={word.id} className="bg-white border border-slate-200 rounded-lg px-3 py-2.5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs text-slate-400 w-5 text-right shrink-0">{i + 1}</span>
-              <span className="text-sm text-slate-600">{word.translation}</span>
+          <div key={word.id} className="bg-white border border-slate-200 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-300 w-4 text-right shrink-0">{i + 1}</span>
+              <div className="flex-1 grid grid-cols-2 gap-2 items-center min-w-0">
+                <input
+                  disabled={submitted}
+                  value={answers[word.id] ?? ''}
+                  onChange={(e) => setAnswers((prev) => ({ ...prev, [word.id]: e.target.value }))}
+                  placeholder="your answer"
+                  className="input text-sm text-right"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                <span className="text-sm text-slate-500 pl-3 truncate">{word.translation}</span>
+              </div>
             </div>
-            <input
-              disabled={submitted}
-              value={answers[word.id] ?? ''}
-              onChange={(e) =>
-                setAnswers((prev) => ({ ...prev, [word.id]: e.target.value }))
-              }
-              placeholder="Type the term…"
-              className="input text-sm"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-            />
           </div>
         ))}
       </div>
 
       <button
         onClick={handleSubmit}
-        disabled={submitted || !allFilled}
+        disabled={submitted}
         className="btn-primary w-full py-3"
       >
-        {submitted ? 'Submitting…' : `Submit all ${order.length} answers`}
+        {submitted ? 'Submitting…' : `Submit ${order.length} answers`}
       </button>
 
-      {!allFilled && !submitted && (
+      {emptyCount > 0 && !submitted && (
         <p className="text-xs text-slate-400 text-center mt-2">
-          Fill in all answers before submitting
+          {emptyCount} answer{emptyCount !== 1 ? 's' : ''} missing — will count as wrong
         </p>
       )}
     </div>
