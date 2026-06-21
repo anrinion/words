@@ -11,12 +11,14 @@ import { useTheme } from '../../contexts/ThemeContext'
 import Preview from './Preview'
 import RoundView from './RoundView'
 import SelfCheck from './SelfCheck'
-import Exam from './Exam'
+import Exam, { ExamCheck } from './Exam'
 import Result from './Result'
 
-type SimplePhase = 'preview' | 'exam' | 'result'
+type SimplePhase = 'preview' | 'exam' | 'examRound' | 'examCheck' | 'result'
 type IndexedPhase = { type: 'round' | 'selfCheck'; index: number }
 type Phase = SimplePhase | IndexedPhase
+
+const isMobile = window.matchMedia('(pointer: coarse)').matches
 
 function isIndexed(p: Phase): p is IndexedPhase {
   return typeof p === 'object'
@@ -28,7 +30,9 @@ function buildPhaseList(numRounds: number): Phase[] {
     phases.push({ type: 'round', index: i })
     phases.push({ type: 'selfCheck', index: i })
   }
-  phases.push('exam', 'result')
+  // Mobile: extra "Exam" round + checkbox marking instead of typed exam
+  phases.push(...(isMobile ? (['examRound', 'examCheck'] as const) : (['exam'] as const)))
+  phases.push('result')
   return phases
 }
 
@@ -123,8 +127,8 @@ export default function Train() {
         updated.rounds = rounds
       }
 
-      // Pre-populate exam order when entering exam phase
-      if (nextPhase === 'exam') {
+      // Pre-populate exam order when entering exam or mobile exam round
+      if (nextPhase === 'exam' || nextPhase === 'examRound') {
         const lastRoundOrder = updated.rounds[updated.rounds.length - 1].orderShown.map(
           (id) => session.batch.find((w) => w.id === id)!,
         )
@@ -174,6 +178,10 @@ export default function Train() {
 
     try {
       const saved = await sessionsApi.create(deck.id, { mode, data })
+      if (isMobile) {
+        setState({ status: 'idle' })
+        return
+      }
       const savedData = saved.data as SessionData
       setState((prev) => {
         if (prev.status !== 'running') return prev
@@ -285,7 +293,7 @@ export default function Train() {
           <div style={outRow(true)}>
             <span style={outNum(true)}>{t.id === 'quest' ? '⚔' : '3'}</span>
             <span style={outLabel}>{t.examLabel}</span>
-            <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>typed answers</span>
+            <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>final check</span>
           </div>
         </div>
 
@@ -330,6 +338,8 @@ export default function Train() {
     round:     { seg: 1, label: 'Practice' },
     selfCheck: { seg: 1, label: 'Practice' },
     exam:      { seg: 2, label: t.examLabel },
+    examRound: { seg: 2, label: t.examLabel },
+    examCheck: { seg: 2, label: t.examLabel },
     result:    { seg: 3, label: 'Results' },
   }
   const { seg: segIdx, label: stepLabel } = phaseInfo[phaseKey] ?? { seg: 0, label: '' }
@@ -383,20 +393,25 @@ export default function Train() {
                 .filter(Boolean) ?? batch
             }
             checkNumber={phase.index + 1}
-            onEditWord={handleEditWord}
-            onDone={(checkedIds) => {
-              const rounds = [...session.rounds]
-              rounds[phase.index] = { ...rounds[phase.index], selfCheckedIds: checkedIds }
-              advance({ rounds })
-            }}
+            onDone={() => advance()}
           />
         )}
 
         {phase === 'exam' && (
-          <Exam
+          <Exam order={examOrder} onSubmit={submitExam} />
+        )}
+
+        {phase === 'examRound' && (
+          <RoundView
             order={examOrder}
-            onSubmit={submitExam}
+            roundNumber={0}
+            label={t.examLabel}
+            onDone={() => advance()}
           />
+        )}
+
+        {phase === 'examCheck' && (
+          <ExamCheck order={examOrder} onSubmit={submitExam} />
         )}
 
         {phase === 'result' && session.result && (

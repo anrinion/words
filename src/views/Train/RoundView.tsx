@@ -3,16 +3,20 @@ import type { Word } from '@shared/types'
 export default function RoundView({
   order,
   roundNumber,
+  label,
   onDone,
 }: {
   order: Word[]
   roundNumber: number
+  label?: string
   onDone: () => void
 }) {
+  const isExam = !!label
+
   return (
     <div className="p-4">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-[var(--ink)]">Round {roundNumber}</h2>
+        <h2 className="text-lg font-bold text-[var(--ink)]">{label ?? `Round ${roundNumber}`}</h2>
         <p className="text-sm text-[var(--ink-soft)]">
           Say the term out loud for each translation. All {order.length} words shown below.
         </p>
@@ -30,7 +34,7 @@ export default function RoundView({
       </div>
 
       <button onClick={onDone} className="btn-primary w-full py-3">
-        Done, check myself →
+        {isExam ? 'Mark results →' : 'Done, check myself →'}
       </button>
     </div>
   )

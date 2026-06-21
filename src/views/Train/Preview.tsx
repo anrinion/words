@@ -83,9 +83,9 @@ export default function Preview({
                   <div className="flex-1 grid grid-cols-2 items-center min-w-0">
                     <div className="flex items-center justify-end gap-1 pr-3 min-w-0">
                       <AudioButton wordId={word.id} type="word" />
-                      <span className="font-medium text-[var(--ink)] text-sm truncate">{word.term}</span>
+                      <span className="font-medium text-[var(--ink)] text-sm break-words">{word.term}</span>
                     </div>
-                    <span className="text-left text-[var(--ink-soft)] text-sm pl-3 truncate">{word.translation}</span>
+                    <span className="text-left text-[var(--ink-soft)] text-sm pl-3 break-words">{word.translation}</span>
                   </div>
                   {onEditWord && (
                     <button
@@ -100,12 +100,12 @@ export default function Preview({
                 {word.example && (
                   <div className="mt-1.5 border-t border-[var(--border)] pt-1.5">
                     <div className="flex items-center gap-1">
-                      <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                        <div className="flex items-center justify-end gap-1 pr-3 min-w-0">
+                      <div className="flex-1 grid grid-cols-2 items-start min-w-0">
+                        <div className="flex items-start justify-end gap-1 pr-3 min-w-0">
                           <AudioButton wordId={word.id} type="example" />
-                          <span className="text-xs italic text-[var(--ink-faint)] truncate">{word.example}</span>
+                          <span className="text-xs italic text-[var(--ink-faint)] break-words">{word.example}</span>
                         </div>
-                        <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 truncate">{word.exampleTranslation ?? ''}</span>
+                        <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 break-words">{word.exampleTranslation ?? ''}</span>
                       </div>
                       {onEditWord && <div className="shrink-0 p-1 text-sm leading-none invisible" aria-hidden>✎</div>}
                     </div>
