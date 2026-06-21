@@ -51,8 +51,8 @@ export default function SelfCheck({
   return (
     <div className="p-4">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-slate-800">Self-check {checkNumber}</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-lg font-bold text-[var(--ink)]">Self-check {checkNumber}</h2>
+        <p className="text-sm text-[var(--ink-soft)]">
           Tick the words you recalled correctly. Scan the list yourself — don't rush.
         </p>
       </div>
@@ -64,7 +64,7 @@ export default function SelfCheck({
 
           if (isEditing) {
             return (
-              <div key={word.id} className="bg-white border-2 border-blue-200 rounded-lg px-3 py-2.5">
+              <div key={word.id} className="bg-[var(--surface)] rounded-lg px-3 py-2.5" style={{ border: '2px solid var(--pop)' }}>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     autoFocus
@@ -99,25 +99,27 @@ export default function SelfCheck({
               <button
                 onClick={() => toggle(word.id)}
                 className={`flex-1 flex gap-3 items-center rounded-lg px-3 py-2.5 border text-left transition-colors ${
-                  isChecked ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200 hover:bg-green-50'
+                  isChecked
+                    ? 'bg-[var(--pop-soft)] border-[var(--pop)]'
+                    : 'bg-[var(--surface)] border-[var(--border)] hover:bg-[var(--surface2)]'
                 }`}
               >
                 <span
                   className={`w-5 h-5 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
-                    isChecked ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300'
+                    isChecked ? 'bg-green-500 border-green-500 text-white' : 'border-[var(--border)]'
                   }`}
                 >
                   {isChecked && '✓'}
                 </span>
                 <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                  <span className="text-right font-medium text-slate-800 text-sm pr-3 truncate">{word.term}</span>
-                  <span className="text-left text-slate-500 text-sm pl-3 truncate">{word.translation}</span>
+                  <span className="text-right font-medium text-[var(--ink)] text-sm pr-3 truncate">{word.term}</span>
+                  <span className="text-left text-[var(--ink-soft)] text-sm pl-3 truncate">{word.translation}</span>
                 </div>
               </button>
               {onEditWord && (
                 <button
                   onClick={() => startEdit(word)}
-                  className="shrink-0 text-slate-300 hover:text-slate-500 p-1 text-sm leading-none"
+                  className="shrink-0 text-[var(--ink-faint)] hover:text-[var(--ink)] p-1 text-sm leading-none"
                   title="Edit"
                 >
                   ✎
@@ -128,7 +130,7 @@ export default function SelfCheck({
         })}
       </div>
 
-      <p className="text-xs text-slate-400 text-center mb-3">
+      <p className="text-xs text-[var(--ink-faint)] text-center mb-3">
         {checked.size} of {batch.length} ticked
       </p>
 

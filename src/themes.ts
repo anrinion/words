@@ -53,7 +53,7 @@ export const THEMES: Record<ThemeId, Theme> = {
   quest: {
     id: 'quest', label: 'Quest',
     appBg: '#0e1117', surface: '#161b24', surface2: '#1d2330',
-    ink: '#eef1f7', inkSoft: '#99a3b4', inkFaint: '#5e6675',
+    ink: '#eef1f7', inkSoft: '#99a3b4', inkFaint: '#7a8799',
     border: '#272e3d', pop: '#a3e635', popInk: '#121807', popSoft: '#1f2913',
     radius: '11px', radiusSm: '8px',
     fontHead: "'Space Grotesk', sans-serif",

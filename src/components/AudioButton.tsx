@@ -32,7 +32,7 @@ export default function AudioButton({
   return (
     <button
       onClick={play}
-      className={`text-slate-400 hover:text-blue-500 transition-colors text-xs leading-none p-0.5 ${playing ? 'text-blue-500' : ''}`}
+      className={`hover:text-[var(--pop)] transition-colors text-xs leading-none p-0.5 ${playing ? 'text-[var(--pop)]' : 'text-[var(--ink-faint)]'}`}
       title="Play audio"
     >
       {playing ? '◼' : '▶'}

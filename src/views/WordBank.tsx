@@ -161,7 +161,7 @@ export default function WordBank() {
 
             {/* Empty states */}
             {!loading && words.length === 0 && editingId !== "new" && (
-                <div className="text-center py-16 text-slate-500">
+                <div className="text-center py-16 text-[var(--ink-soft)]">
                     <p className="text-4xl mb-3">📝</p>
                     <p className="font-medium">No words yet</p>
                     <p className="text-sm mt-1">
@@ -192,14 +192,14 @@ export default function WordBank() {
                     ) : (
                         <div
                             key={word.id}
-                            className="bg-white border border-slate-200 rounded-lg px-3 py-2.5"
+                            className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2.5"
                         >
                             {/* Main row: term | translation */}
                             <div className="flex items-center gap-1.5">
                                 <AudioButton wordId={word.id} type="word" />
                                 <div className="flex-1 grid grid-cols-2 items-center min-w-0">
                                     <div className="flex items-center justify-end gap-1 min-w-0 pr-3">
-                                        <span className="font-medium text-slate-800 text-sm truncate">
+                                        <span className="font-medium text-[var(--ink)] text-sm truncate">
                                             {word.term}
                                         </span>
                                         {word.weak === 1 && (
@@ -213,7 +213,7 @@ export default function WordBank() {
                                             </span>
                                         )}
                                     </div>
-                                    <span className="text-sm text-slate-500 pl-3 truncate">
+                                    <span className="text-sm text-[var(--ink-soft)] pl-3 truncate">
                                         {word.translation}
                                     </span>
                                 </div>
@@ -231,7 +231,7 @@ export default function WordBank() {
                                     )}
                                     <button
                                         onClick={() => setEditingId(word.id)}
-                                        className="text-slate-400 hover:text-slate-600 text-sm p-1 leading-none"
+                                        className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-sm p-1 leading-none"
                                     >
                                         ✎
                                     </button>
@@ -245,20 +245,21 @@ export default function WordBank() {
                             </div>
 
                             {word.example && (
-                                <div className="mt-1.5 border-t border-slate-100 pt-1.5">
-                                    <div className="grid grid-cols-2 items-center min-w-0">
-                                        <div className="flex items-center justify-end gap-1 pr-3 min-w-0">
-                                            <AudioButton
-                                                wordId={word.id}
-                                                type="example"
-                                            />
-                                            <span className="text-xs italic text-slate-500 truncate">
+                                <div className="mt-1.5 border-t border-[var(--border)] pt-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <AudioButton wordId={word.id} type="example" />
+                                        <div className="flex-1 grid grid-cols-2 items-center min-w-0">
+                                            <span className="text-right text-xs italic text-[var(--ink-faint)] pr-3 truncate">
                                                 {word.example}
                                             </span>
+                                            <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 truncate">
+                                                {word.exampleTranslation ?? ""}
+                                            </span>
                                         </div>
-                                        <span className="text-left text-xs italic text-slate-400 pl-3 truncate">
-                                            {word.exampleTranslation ?? ""}
-                                        </span>
+                                        <div className="shrink-0 flex gap-0.5 invisible" aria-hidden>
+                                            <span className="text-sm p-1 leading-none">✎</span>
+                                            <span className="text-xs p-1">✕</span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -267,12 +268,12 @@ export default function WordBank() {
                             {(word.levelTag || word.categoryTag) && (
                                 <div className="flex gap-1 mt-1 flex-wrap">
                                     {word.levelTag && (
-                                        <span className="text-xs bg-slate-100 text-slate-500 px-1.5 rounded">
+                                        <span className="text-xs bg-[var(--surface2)] text-[var(--ink-faint)] px-1.5 rounded">
                                             {word.levelTag}
                                         </span>
                                     )}
                                     {word.categoryTag && (
-                                        <span className="text-xs bg-slate-100 text-slate-500 px-1.5 rounded">
+                                        <span className="text-xs bg-[var(--surface2)] text-[var(--ink-faint)] px-1.5 rounded">
                                             {word.categoryTag}
                                         </span>
                                     )}
@@ -286,14 +287,14 @@ export default function WordBank() {
             {/* Import picker modal */}
             {showImport && (
                 <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl">
+                    <div className="bg-[var(--surface)] rounded-2xl w-full max-w-sm p-5 shadow-xl" style={{ border: '1px solid var(--border)' }}>
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-semibold text-slate-800">
+                            <h2 className="font-semibold text-[var(--ink)]">
                                 Import words
                             </h2>
                             <button
                                 onClick={() => setShowImport(false)}
-                                className="text-slate-400 hover:text-slate-600 text-xl"
+                                className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xl"
                             >
                                 ×
                             </button>
@@ -303,12 +304,12 @@ export default function WordBank() {
                                 <button
                                     key={adapter.id}
                                     onClick={() => runAdapter(adapter)}
-                                    className="w-full text-left bg-slate-50 hover:bg-slate-100 rounded-lg px-4 py-3 transition-colors"
+                                    className="w-full text-left bg-[var(--surface2)] hover:bg-[var(--border)] rounded-lg px-4 py-3 transition-colors"
                                 >
-                                    <p className="font-medium text-slate-800 text-sm">
+                                    <p className="font-medium text-[var(--ink)] text-sm">
                                         {adapter.name}
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-0.5">
+                                    <p className="text-xs text-[var(--ink-soft)] mt-0.5">
                                         {adapter.description}
                                     </p>
                                 </button>
@@ -369,7 +370,7 @@ function WordCardEdit({
     }
 
     return (
-        <div className="bg-white border-2 border-blue-200 rounded-lg px-3 py-3 space-y-2">
+        <div className="bg-[var(--surface)] rounded-lg px-3 py-3 space-y-2" style={{ border: '2px solid var(--pop)' }}>
             {/* Term | Translation */}
             <div className="grid grid-cols-2 gap-2">
                 <input
@@ -497,12 +498,12 @@ function ImportResultBanner({
             {showDuplicates && (
                 <div
                     ref={listRef}
-                    className="mt-2 max-h-40 overflow-y-auto bg-white border border-green-100 rounded p-2 space-y-0.5"
+                    className="mt-2 max-h-40 overflow-y-auto bg-[var(--surface2)] border border-[var(--border)] rounded p-2 space-y-0.5"
                 >
                     {result.skippedDuplicates.map((term, i) => (
                         <p
                             key={i}
-                            className="text-xs text-slate-500 font-mono truncate"
+                            className="text-xs text-[var(--ink-faint)] font-mono truncate"
                         >
                             {term}
                         </p>

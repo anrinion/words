@@ -20,12 +20,12 @@ function TextPasteDialog({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg p-5 shadow-xl">
+      <div className="bg-[var(--surface)] rounded-2xl w-full max-w-lg p-5 shadow-xl" style={{ border: '1px solid var(--border)' }}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-slate-800">Paste word list</h2>
-          <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+          <h2 className="font-semibold text-[var(--ink)]">Paste word list</h2>
+          <button type="button" onClick={onCancel} className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-xl">×</button>
         </div>
-        <p className="text-xs text-slate-500 mb-2">
+        <p className="text-xs text-[var(--ink-soft)] mb-2">
           One word per line. Separate term and translation with a tab, semicolon, pipe, or " - ".
           Optional columns: levelTag, categoryTag.
         </p>

@@ -71,6 +71,7 @@ export interface Settings {
   batchSize: number
   numRounds: number
   masteryStreakThreshold: number
+  batchOrder: 'random' | 'sequential'
   fuzzyToleranceBands: ToleranceBand[]
   gradeBands: GradeBand[]
 }
@@ -78,6 +79,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   batchSize: 15,
   numRounds: 2,
+  batchOrder: 'random',
   masteryStreakThreshold: 2,
   fuzzyToleranceBands: [
     { maxLen: 4, tolerance: 0 },

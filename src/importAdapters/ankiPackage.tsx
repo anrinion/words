@@ -115,10 +115,10 @@ function FieldMappingModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl flex flex-col max-h-[90vh]">
-        <div className="p-5 border-b border-slate-100 shrink-0">
-          <h2 className="font-semibold text-slate-800">Map Anki fields</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+      <div className="bg-[var(--surface)] rounded-2xl w-full max-w-sm shadow-xl flex flex-col max-h-[90vh]" style={{ border: '1px solid var(--border)' }}>
+        <div className="p-5 border-b border-[var(--border)] shrink-0">
+          <h2 className="font-semibold text-[var(--ink)]">Map Anki fields</h2>
+          <p className="text-xs text-[var(--ink-soft)] mt-0.5">
             {noteCount} notes · {fields.length} fields — assign each to a role
           </p>
         </div>
@@ -129,7 +129,7 @@ function FieldMappingModal({
             const selectedField = selectedIdx >= 0 ? fields[selectedIdx] : null
             return (
               <div key={key}>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">
+                <label className="text-xs font-medium text-[var(--ink-soft)] mb-1 block">
                   {label}
                   {required && <span className="text-red-500 ml-0.5">*</span>}
                 </label>
@@ -156,7 +156,7 @@ function FieldMappingModal({
                   </button>
                 )}
                 {selectedField && !selectedField.sampleAudio && selectedField.samples.length > 0 && (
-                  <p className="text-xs text-slate-400 mt-1 truncate">
+                  <p className="text-xs text-[var(--ink-faint)] mt-1 truncate">
                     e.g. {selectedField.samples.slice(0, 2).join(' · ')}
                   </p>
                 )}
@@ -165,7 +165,7 @@ function FieldMappingModal({
           })}
         </div>
 
-        <div className="p-5 border-t border-slate-100 flex gap-3 shrink-0">
+        <div className="p-5 border-t border-[var(--border)] flex gap-3 shrink-0">
           <button onClick={onCancel} className="btn-secondary flex-1">
             Cancel
           </button>

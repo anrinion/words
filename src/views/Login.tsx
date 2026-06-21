@@ -37,15 +37,15 @@ export default function Login({ onLogin }: { onLogin: (email: string) => void })
   }
 
   return (
-    <div className="flex items-center justify-center min-h-dvh bg-slate-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">Words</h1>
-        <p className="text-sm text-slate-500 mb-6">Sign in to continue</p>
+    <div className="flex items-center justify-center min-h-dvh bg-[var(--app-bg)] p-4">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-8" style={{ border: '1px solid var(--border)' }}>
+        <h1 className="text-2xl font-bold text-[var(--ink)] mb-1">Words</h1>
+        <p className="text-sm text-[var(--ink-soft)] mb-6">Sign in to continue</p>
 
         {step === 'email' ? (
           <div className="flex flex-col gap-3">
             <div>
-              <label className="block text-sm text-slate-600 mb-1">Email address</label>
+              <label className="block text-sm text-[var(--ink-soft)] mb-1">Email address</label>
               <input
                 autoFocus
                 type="email"
@@ -67,11 +67,11 @@ export default function Login({ onLogin }: { onLogin: (email: string) => void })
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[var(--ink-soft)]">
               Code sent to <strong>{email}</strong>
             </p>
             <div>
-              <label className="block text-sm text-slate-600 mb-1">6-digit code</label>
+              <label className="block text-sm text-[var(--ink-soft)] mb-1">6-digit code</label>
               <input
                 autoFocus
                 type="text"
@@ -94,7 +94,7 @@ export default function Login({ onLogin }: { onLogin: (email: string) => void })
             <button
               type="button"
               onClick={() => { setStep('email'); setCode(''); setError('') }}
-              className="text-sm text-slate-500 hover:text-slate-700 text-center"
+              className="text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] text-center"
             >
               ← Use a different email
             </button>

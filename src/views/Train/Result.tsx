@@ -37,13 +37,10 @@ export default function Result({
   const total = result.answers.length
 
   const gradeColor =
-    result.scorePct >= 90
-      ? 'text-green-600'
-      : result.scorePct >= 70
-        ? 'text-blue-600'
-        : result.scorePct >= 50
-          ? 'text-yellow-600'
-          : 'text-red-500'
+    result.scorePct >= 90 ? '#16a34a'
+    : result.scorePct >= 70 ? '#2563eb'
+    : result.scorePct >= 50 ? '#d97706'
+    : '#ef4444'
 
   async function markCorrect(wordId: string) {
     await wordsApi.update(deckId, wordId, { weak: 0, streak: 1 })
@@ -59,11 +56,11 @@ export default function Result({
     <div className="p-4">
       {/* Score summary */}
       <div className="text-center py-6 mb-4">
-        <p className={`text-5xl font-bold mb-1 ${gradeColor}`}>{result.scorePct}%</p>
-        <p className={`text-lg font-semibold ${gradeColor}`}>{result.grade}</p>
-        <p className="text-slate-500 text-sm mt-1">
+        <p className="text-5xl font-bold mb-1" style={{ color: gradeColor }}>{result.scorePct}%</p>
+        <p className="text-lg font-semibold" style={{ color: gradeColor }}>{result.grade}</p>
+        <p className="text-sm mt-1 text-[var(--ink-soft)]">
           {correct} / {total} correct
-          {overrides.size > 0 && <span className="text-slate-400"> (with overrides)</span>}
+          {overrides.size > 0 && <span className="text-[var(--ink-faint)]"> (with overrides)</span>}
         </p>
       </div>
 
@@ -76,34 +73,33 @@ export default function Result({
           const isCorrect = ov === 'correct' || (answer.matched && ov !== 'weak')
           const isWeak = ov === 'weak'
 
+          const bgColor = isWeak
+            ? 'rgba(249,115,22,.1)' : isCorrect
+            ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)'
+          const borderColor = isWeak
+            ? 'rgba(249,115,22,.3)' : isCorrect
+            ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'
+          const iconColor = isWeak ? '#f97316' : isCorrect ? '#16a34a' : '#ef4444'
+
           return (
             <div
               key={answer.wordId}
-              className={`rounded-lg px-3 py-2.5 border ${
-                isWeak
-                  ? 'bg-orange-50 border-orange-200'
-                  : isCorrect
-                    ? 'bg-green-50 border-green-200'
-                    : 'bg-red-50 border-red-200'
-              }`}
+              className="rounded-lg px-3 py-2.5"
+              style={{ background: bgColor, border: `1px solid ${borderColor}` }}
             >
               <div className="flex items-center gap-2">
-                <span className={`text-sm font-medium shrink-0 ${
-                  isWeak ? 'text-orange-500' : isCorrect ? 'text-green-700' : 'text-red-700'
-                }`}>
+                <span className="text-sm font-medium shrink-0" style={{ color: iconColor }}>
                   {isWeak ? '⚑' : isCorrect ? '✓' : '✗'}
                 </span>
                 <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                  <span className={`text-right text-sm font-medium pr-3 truncate ${
-                    isCorrect && !isWeak ? 'text-slate-700' : 'text-slate-500'
-                  }`}>{word.term}</span>
-                  <span className="text-left text-slate-500 text-sm pl-3 truncate">{word.translation}</span>
+                  <span className="text-right text-sm font-medium pr-3 truncate text-[var(--ink-soft)]">{word.term}</span>
+                  <span className="text-left text-[var(--ink-soft)] text-sm pl-3 truncate">{word.translation}</span>
                 </div>
                 {!ov && (
                   answer.matched ? (
                     <button
                       onClick={() => markWeak(answer.wordId)}
-                      className="shrink-0 text-xs text-slate-400 hover:text-orange-500 px-1.5 py-0.5 rounded border border-transparent hover:border-orange-200 transition-colors"
+                      className="shrink-0 text-xs text-[var(--ink-faint)] hover:text-orange-500 px-1.5 py-0.5 rounded border border-transparent hover:border-orange-300 transition-colors"
                       title="Flag as weak"
                     >
                       ⚑
@@ -111,7 +107,7 @@ export default function Result({
                   ) : (
                     <button
                       onClick={() => markCorrect(answer.wordId)}
-                      className="shrink-0 text-xs text-slate-400 hover:text-green-600 px-1.5 py-0.5 rounded border border-transparent hover:border-green-200 transition-colors"
+                      className="shrink-0 text-xs text-[var(--ink-faint)] hover:text-green-600 px-1.5 py-0.5 rounded border border-transparent hover:border-green-300 transition-colors"
                       title="Accept as correct"
                     >
                       ✓
@@ -119,14 +115,14 @@ export default function Result({
                   )
                 )}
                 {ov && (
-                  <span className="shrink-0 text-xs text-slate-400 italic">
+                  <span className="shrink-0 text-xs text-[var(--ink-faint)] italic">
                     {ov === 'correct' ? 'accepted' : 'flagged'}
                   </span>
                 )}
               </div>
               {!isCorrect && !ov && (
                 <div className="mt-1 pl-5 text-xs space-y-0.5">
-                  <p className="text-red-500">
+                  <p style={{ color: '#ef4444' }}>
                     You wrote: <span className="font-mono">{answer.rawInput || '(blank)'}</span>
                   </p>
                 </div>

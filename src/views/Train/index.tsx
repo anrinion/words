@@ -199,7 +199,7 @@ export default function Train() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (state.status === 'idle') {
-    const pad: CSSProperties = { padding: '26px 30px 40px', maxWidth: 660, margin: '0 auto' }
+    const pad: CSSProperties = { padding: '26px 30px 40px', maxWidth: 880, margin: '0 auto' }
     const kicker: CSSProperties = { fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.11em', textTransform: 'uppercase', color: t.pop, display: 'block', marginBottom: 9 }
     const h2: CSSProperties = { fontFamily: t.fontHead, fontSize: 22, fontWeight: 600, color: t.ink, margin: '0 0 6px', letterSpacing: '-.01em' }
     const lead: CSSProperties = { fontFamily: t.fontBody, fontSize: 14, fontWeight: 500, color: t.inkSoft, margin: '0 0 22px', lineHeight: 1.5 }
@@ -304,7 +304,7 @@ export default function Train() {
   if (state.status === 'loading') {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-slate-400">Preparing session…</p>
+        <p className="text-[var(--ink-faint)]">Preparing session…</p>
       </div>
     )
   }
@@ -313,7 +313,7 @@ export default function Train() {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 text-center">
         <p className="text-red-500 font-medium mb-2">Something went wrong</p>
-        <p className="text-slate-500 text-sm mb-4">{state.message}</p>
+        <p className="text-[var(--ink-soft)] text-sm mb-4">{state.message}</p>
         <button onClick={() => setState({ status: 'idle' })} className="btn-secondary">
           Back
         </button>
@@ -329,7 +329,7 @@ export default function Train() {
     preview:   { seg: 0, label: 'Read-through' },
     round:     { seg: 1, label: 'Practice' },
     selfCheck: { seg: 1, label: 'Practice' },
-    exam:      { seg: 2, label: 'Exam' },
+    exam:      { seg: 2, label: t.examLabel },
     result:    { seg: 3, label: 'Results' },
   }
   const { seg: segIdx, label: stepLabel } = phaseInfo[phaseKey] ?? { seg: 0, label: '' }
@@ -377,7 +377,11 @@ export default function Train() {
 
         {isIndexed(phase) && phase.type === 'selfCheck' && (
           <SelfCheck
-            batch={batch}
+            batch={
+              rounds[phase.index]?.orderShown
+                .map((id) => batch.find((w) => w.id === id)!)
+                .filter(Boolean) ?? batch
+            }
             checkNumber={phase.index + 1}
             onEditWord={handleEditWord}
             onDone={(checkedIds) => {

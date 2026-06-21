@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { eq, and, isNull } from 'drizzle-orm'
 import * as schema from '../../db/schema'
 import { matchesAnyToken, gradeLabel } from '../../shared/fuzzy'
-import { selectBatch, isMastered } from '../../shared/batch'
+import { selectBatch, isMastered, shuffle } from '../../shared/batch'
 import type { Settings, SessionData, ParsedWord } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/types'
 
@@ -404,8 +404,9 @@ app.get('/api/decks/:deckId/batch', async (c) => {
   const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
   if (!deck) return c.json({ error: 'Not found' }, 404)
 
-  const words = await db(c.env).select().from(schema.words).where(eq(schema.words.deckId, deckId)).all()
+  const rawWords = await db(c.env).select().from(schema.words).where(eq(schema.words.deckId, deckId)).all()
   const settings = await getSettings(db(c.env), userId, deckId)
+  const words = settings.batchOrder !== 'sequential' ? shuffle(rawWords) : rawWords
   return c.json(selectBatch(words, mode, settings))
 })
 

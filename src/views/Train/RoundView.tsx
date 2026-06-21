@@ -12,17 +12,19 @@ export default function RoundView({
   return (
     <div className="p-4">
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-slate-800">Round {roundNumber}</h2>
-        <p className="text-sm text-slate-500">
+        <h2 className="text-lg font-bold text-[var(--ink)]">Round {roundNumber}</h2>
+        <p className="text-sm text-[var(--ink-soft)]">
           Say the term out loud for each translation. All {order.length} words shown below.
         </p>
       </div>
 
       <div className="space-y-2 mb-6">
         {order.map((word, i) => (
-          <div key={word.id} className="flex gap-3 bg-white border border-slate-200 rounded-lg px-3 py-2.5 items-center">
-            <span className="text-xs text-slate-400 w-5 shrink-0 text-right">{i + 1}</span>
-            <span className="text-slate-700 text-sm">{word.translation}</span>
+          <div key={word.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2.5">
+            <div className="grid grid-cols-2 items-center min-w-0">
+              <span className="text-xs text-[var(--ink-faint)] text-right pr-3">{i + 1}</span>
+              <span className="text-[var(--ink-soft)] text-sm pl-3">{word.translation}</span>
+            </div>
           </div>
         ))}
       </div>
