@@ -18,6 +18,11 @@ const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 app.use('*', cors())
 
+app.onError((err, c) => {
+  console.error(err)
+  return c.json({ error: err.message }, 500)
+})
+
 function db(env: Bindings) {
   return drizzle(env.DB, { schema })
 }
@@ -360,8 +365,13 @@ app.post('/api/decks/:deckId/words/import', async (c) => {
     imported++
   }
 
-  for (let i = 0; i < toInsert.length; i += 100) {
-    await db(c.env).insert(schema.words).values(toInsert.slice(i, i + 100))
+  for (let i = 0; i < toInsert.length; i += 50) {
+    await c.env.DB.batch(
+      toInsert.slice(i, i + 50).map((word) => {
+        const { sql, params } = db(c.env).insert(schema.words).values(word).toSQL()
+        return c.env.DB.prepare(sql).bind(...(params as unknown[]))
+      }),
+    )
   }
 
   return c.json({ imported, duplicates, rejected: body.rejected ?? [] })

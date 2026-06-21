@@ -38,8 +38,7 @@ async function parseApkg(buffer: ArrayBuffer): Promise<ParseResult> {
 
   const dbBytes = await dbFile.async('arraybuffer')
   const SQL = await initSqlJs({
-    // sql.js WASM is loaded from the CDN; for production, copy to /public
-    locateFile: (file: string) => `https://sql.js.org/dist/${file}`,
+    locateFile: () => '/sql-wasm.wasm',
   })
 
   const db = new SQL.Database(new Uint8Array(dbBytes))
