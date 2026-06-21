@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { wordsApi } from "../api/words";
+import { decksApi } from "../api/decks";
 import type { Deck, Word, ParsedWord, ImportResult } from "@shared/types";
 import { textPasteAdapter } from "../importAdapters/textPaste";
 import { fileAdapter } from "../importAdapters/file";
@@ -8,6 +9,7 @@ import { ankiPackageAdapter } from "../importAdapters/ankiPackage";
 import { cameraAdapter } from "../importAdapters/camera";
 import type { ImportAdapter } from "../importAdapters/types";
 import AudioButton from "../components/AudioButton";
+import { useTheme } from "../contexts/ThemeContext";
 
 const ADAPTERS: ImportAdapter[] = [
     textPasteAdapter,
@@ -16,42 +18,24 @@ const ADAPTERS: ImportAdapter[] = [
     cameraAdapter,
 ];
 
-type Filter = {
-    search: string;
-    levelTag: string;
-    categoryTag: string;
-    status: "" | "weak" | "mastered";
-};
-
 export default function WordBank() {
     const deck = useOutletContext<Deck>();
+    const navigate = useNavigate();
     const [words, setWords] = useState<Word[]>([]);
-    const [filter, setFilter] = useState<Filter>({
-        search: "",
-        levelTag: "",
-        categoryTag: "",
-        status: "",
-    });
     const [importResult, setImportResult] = useState<ImportResult | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null); // 'new' | word.id | null
     const [showImport, setShowImport] = useState(false);
     const [loading, setLoading] = useState(true);
 
     async function load() {
-        const params: Record<string, string> = {};
-        if (filter.search) params.search = filter.search;
-        if (filter.levelTag) params.levelTag = filter.levelTag;
-        if (filter.categoryTag) params.categoryTag = filter.categoryTag;
-        if (filter.status === "weak") params.weak = "1";
-        if (filter.status === "mastered") params.mastered = "1";
-        const data = await wordsApi.list(deck.id, params);
+        const data = await wordsApi.list(deck.id);
         setWords(data);
         setLoading(false);
     }
 
     useEffect(() => {
         load();
-    }, [deck.id, filter]);
+    }, [deck.id]);
 
     async function runAdapter(adapter: ImportAdapter) {
         setShowImport(false);
@@ -71,13 +55,10 @@ export default function WordBank() {
         setWords((prev) => prev.filter((w) => w.id !== id));
     }
 
-    async function handleDeleteAll() {
-        if (
-            !confirm(`Delete all ${words.length} words? This cannot be undone.`)
-        )
-            return;
-        await wordsApi.deleteAll(deck.id);
-        setWords([]);
+    async function handleDeleteDeck() {
+        if (!confirm(`Delete "${deck.name}" and all its words? This cannot be undone.`)) return;
+        await decksApi.remove(deck.id);
+        navigate('/', { replace: true });
     }
 
     async function handleClearWeak(id: string) {
@@ -101,54 +82,17 @@ export default function WordBank() {
 
     return (
         <div className="p-4">
-            {/* Search + filter bar */}
-            <div className="flex gap-2 mb-3">
-                <input
-                    value={filter.search}
-                    onChange={(e) =>
-                        setFilter((f) => ({ ...f, search: e.target.value }))
-                    }
-                    placeholder="Search words…"
-                    className="input flex-1"
-                />
-                <select
-                    value={filter.status}
-                    onChange={(e) =>
-                        setFilter((f) => ({
-                            ...f,
-                            status: e.target.value as Filter["status"],
-                        }))
-                    }
-                    className="input w-auto"
-                >
-                    <option value="">All</option>
-                    <option value="weak">Weak</option>
-                    <option value="mastered">Mastered</option>
-                </select>
-            </div>
-
-            {/* Actions */}
+            {/* Toolbar */}
             <div className="flex gap-2 mb-4">
-                <button
-                    onClick={() => setShowImport(true)}
-                    className="btn-primary text-sm flex-1"
-                >
+                <button onClick={() => setShowImport(true)} className="btn-primary text-sm px-4 py-2">
                     Import
                 </button>
-                <button
-                    onClick={() => setEditingId("new")}
-                    className="btn-secondary text-sm flex-1"
-                >
+                <button onClick={() => setEditingId('new')} className="btn-secondary text-sm px-4 py-2">
                     + Add word
                 </button>
-                {words.length > 0 && (
-                    <button
-                        onClick={handleDeleteAll}
-                        className="text-red-400 hover:text-red-600 text-sm px-2"
-                    >
-                        Delete all
-                    </button>
-                )}
+                <button onClick={handleDeleteDeck} className="ml-auto text-red-400 hover:text-red-600 text-sm px-2">
+                    Delete deck
+                </button>
             </div>
 
             {/* Import result banner */}
@@ -194,65 +138,47 @@ export default function WordBank() {
                             key={word.id}
                             className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2.5"
                         >
-                            {/* Main row: term | translation */}
-                            <div className="flex items-center gap-1.5">
+                            {/* Main row: status dot | term | translation | actions */}
+                            <div className="flex items-center gap-2">
+                                <StatusDot word={word} />
                                 <AudioButton wordId={word.id} type="word" />
                                 <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                                    <div className="flex items-center justify-end gap-1 min-w-0 pr-3">
-                                        <span className="font-medium text-[var(--ink)] text-sm truncate">
-                                            {word.term}
-                                        </span>
-                                        {word.weak === 1 && (
-                                            <span className="shrink-0 text-xs bg-red-100 text-red-600 px-1.5 rounded-full">
-                                                weak
-                                            </span>
-                                        )}
-                                        {word.streak >= 2 && (
-                                            <span className="shrink-0 text-xs bg-green-100 text-green-600 px-1.5 rounded-full">
-                                                ✓{word.streak}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className="text-sm text-[var(--ink-soft)] pl-3 truncate">
+                                    <span className="font-medium text-[var(--ink)] text-sm text-right pr-3 break-words">
+                                        {word.term}
+                                    </span>
+                                    <span className="text-sm text-[var(--ink-soft)] pl-3 break-words">
                                         {word.translation}
                                     </span>
                                 </div>
                                 <div className="shrink-0 flex gap-0.5">
                                     {word.weak === 1 && (
                                         <button
-                                            onClick={() =>
-                                                handleClearWeak(word.id)
-                                            }
+                                            onClick={() => handleClearWeak(word.id)}
                                             className="text-orange-400 hover:text-orange-600 text-xs p-1"
                                             title="Remove from weak"
-                                        >
-                                            ✓
-                                        </button>
+                                        >✓</button>
                                     )}
                                     <button
                                         onClick={() => setEditingId(word.id)}
                                         className="text-[var(--ink-faint)] hover:text-[var(--ink)] text-sm p-1 leading-none"
-                                    >
-                                        ✎
-                                    </button>
+                                    >✎</button>
                                     <button
                                         onClick={() => handleDelete(word.id)}
                                         className="text-red-300 hover:text-red-500 text-xs p-1"
-                                    >
-                                        ✕
-                                    </button>
+                                    >✕</button>
                                 </div>
                             </div>
 
                             {word.example && (
                                 <div className="mt-1.5 border-t border-[var(--border)] pt-1.5">
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-[9px] shrink-0 mt-0.5" aria-hidden />
                                         <AudioButton wordId={word.id} type="example" />
-                                        <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                                            <span className="text-right text-xs italic text-[var(--ink-faint)] pr-3 truncate">
+                                        <div className="flex-1 grid grid-cols-2 items-start min-w-0">
+                                            <span className="text-right text-xs italic text-[var(--ink-faint)] pr-3 break-words">
                                                 {word.example}
                                             </span>
-                                            <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 truncate">
+                                            <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 break-words">
                                                 {word.exampleTranslation ?? ""}
                                             </span>
                                         </div>
@@ -320,6 +246,23 @@ export default function WordBank() {
             )}
         </div>
     );
+}
+
+// ── Status dot ───────────────────────────────────────────────────────────────
+
+function StatusDot({ word }: { word: Word }) {
+    const { theme: t } = useTheme()
+    let fill: string, border: string
+    if (word.streak >= 2) { fill = t.pop; border = t.pop }
+    else if (word.weak === 1) { fill = '#ef4444'; border = '#ef4444' }
+    else if (word.lastSeenAt !== null) { fill = t.inkSoft; border = t.inkSoft }
+    else { fill = 'transparent'; border = t.inkFaint }
+    return (
+        <span style={{
+            width: 9, height: 9, flexShrink: 0, borderRadius: '50%',
+            background: fill, border: `1.6px solid ${border}`, display: 'inline-block',
+        }} />
+    )
 }
 
 // ── Inline word editor ────────────────────────────────────────────────────────

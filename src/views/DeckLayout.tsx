@@ -35,6 +35,7 @@ export default function DeckLayout() {
 
   const [deck, setDeck] = useState<Deck | null>(null)
   const [allDecks, setAllDecks] = useState<Deck[]>([])
+  const [allDeckStats, setAllDeckStats] = useState<Record<string, DeckStats>>({})
   const [deckOpen, setDeckOpen] = useState(false)
   const [inSession, setInSession] = useState(false)
   const [modal, setModal] = useState<DeckModal>(null)
@@ -63,6 +64,18 @@ export default function DeckLayout() {
       setStats({ total: words.length, mastered: words.filter((w) => w.streak >= 2).length })
     })
   }, [deckId])
+
+  useEffect(() => {
+    if (allDecks.length === 0) return
+    Promise.all(
+      allDecks.map((d) =>
+        wordsApi.list(d.id).then((words) => [
+          d.id,
+          { total: words.length, mastered: words.filter((w) => w.streak >= 2).length },
+        ] as [string, DeckStats])
+      )
+    ).then((results) => setAllDeckStats(Object.fromEntries(results)))
+  }, [allDecks])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -142,19 +155,13 @@ export default function DeckLayout() {
               }}>
                 {deck.name.slice(0, 2).toUpperCase()}
               </span>
-              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.18, minWidth: 0, gap: 3 }}>
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.18, minWidth: 0 }}>
                 <span style={{ fontFamily: t.fontHead, fontSize: 15, fontWeight: 600, color: t.ink, whiteSpace: 'nowrap' }}>
                   {deck.name}
                 </span>
                 <span style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 500, color: t.inkFaint, whiteSpace: 'nowrap' }}>
-                  {deck.targetLanguage} · {deck.nativeLanguage}
-                  {stats && stats.total > 0 && ` · ${stats.mastered}/${stats.total}`}
+                  {stats && stats.total > 0 ? `${stats.mastered} of ${stats.total} learned` : `${deck.targetLanguage} · ${deck.nativeLanguage}`}
                 </span>
-                {stats && stats.total > 0 && (
-                  <div style={{ width: 80, height: 3, background: t.border, borderRadius: 999, overflow: 'hidden' }}>
-                    <div style={{ width: `${(stats.mastered / stats.total) * 100}%`, height: '100%', background: t.pop, borderRadius: 999, transition: 'width .4s' }} />
-                  </div>
-                )}
               </span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" style={{ color: t.inkFaint, marginLeft: 3, flexShrink: 0 }}>
                 <polyline points="6 9 12 15 18 9" />
@@ -175,46 +182,39 @@ export default function DeckLayout() {
                 {allDecks.map((d) => {
                   const cur = d.id === deckId
                   return (
-                    <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 3, margin: '1px 0' }}>
-                      <button
-                        onClick={() => { setDeckOpen(false); navigate(`/deck/${d.id}/train`) }}
-                        style={{
-                          flex: 1, display: 'flex', alignItems: 'center', gap: 11, minWidth: 0,
-                          textAlign: 'left', padding: '9px 10px', border: 'none',
-                          borderRadius: t.radiusSm, cursor: 'pointer',
-                          background: cur ? t.popSoft : 'transparent', transition: 'background .12s',
-                        }}
-                      >
-                        <span style={{
-                          width: 34, height: 34, flexShrink: 0, borderRadius: t.radiusSm,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          background: cur ? t.pop : t.surface2,
-                          color: cur ? t.popInk : t.inkSoft,
-                          fontFamily: t.fontHead, fontSize: 12, fontWeight: 700,
-                        }}>
-                          {d.name.slice(0, 2).toUpperCase()}
+                    <button
+                      key={d.id}
+                      onClick={() => { setDeckOpen(false); navigate(`/deck/${d.id}/train`) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 11, width: '100%', minWidth: 0,
+                        textAlign: 'left', padding: '9px 10px', border: 'none', margin: '1px 0',
+                        borderRadius: t.radiusSm, cursor: 'pointer',
+                        background: cur ? t.popSoft : 'transparent', transition: 'background .12s',
+                      }}
+                    >
+                      <span style={{
+                        width: 34, height: 34, flexShrink: 0, borderRadius: t.radiusSm,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: cur ? t.pop : t.surface2,
+                        color: cur ? t.popInk : t.inkSoft,
+                        fontFamily: t.fontHead, fontSize: 12, fontWeight: 700,
+                      }}>
+                        {d.name.slice(0, 2).toUpperCase()}
+                      </span>
+                      <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2, flex: 1, minWidth: 0 }}>
+                        <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 600, color: t.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
+                        <span style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 500, color: t.inkFaint }}>
+                          {allDeckStats[d.id]
+                            ? `${allDeckStats[d.id].mastered} of ${allDeckStats[d.id].total} learned`
+                            : `${d.targetLanguage} · ${d.nativeLanguage}`}
                         </span>
-                        <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2, flex: 1, minWidth: 0 }}>
-                          <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 600, color: t.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
-                          <span style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 500, color: t.inkFaint }}>{d.targetLanguage} · {d.nativeLanguage}</span>
-                        </span>
-                        {cur && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" style={{ color: t.pop, flexShrink: 0 }}>
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => { setDeckOpen(false); setModal({ type: 'rename', deck: d }) }}
-                        style={{ padding: '6px 8px', border: 'none', background: 'transparent', color: t.inkFaint, cursor: 'pointer', fontSize: 14, borderRadius: t.radiusSm }}
-                        title="Rename"
-                      >✎</button>
-                      <button
-                        onClick={() => { setDeckOpen(false); setModal({ type: 'delete', deck: d }) }}
-                        style={{ padding: '6px 8px', border: 'none', background: 'transparent', color: t.inkFaint, cursor: 'pointer', fontSize: 12, borderRadius: t.radiusSm }}
-                        title="Delete"
-                      >✕</button>
-                    </div>
+                      </span>
+                      {cur && (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" style={{ color: t.pop, flexShrink: 0 }}>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </button>
                   )
                 })}
 
@@ -277,11 +277,7 @@ export default function DeckLayout() {
             )}
             <button
               onClick={() => setShowSettings(true)}
-              style={{
-                width: 36, height: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: `1px solid ${t.border}`, borderRadius: t.radiusSm, background: t.surface2,
-                color: t.inkSoft, cursor: 'pointer', transition: 'background .13s',
-              }}
+              style={{ ...tab(false), padding: '9px 12px' }}
               title="Settings"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -347,40 +343,72 @@ export default function DeckLayout() {
 
 // ── Progress badge (header top-right) ────────────────────────────────────────
 
+function dateHash(seed: number): number {
+  const d = new Date()
+  const str = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${seed}`
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
 function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
-  const pct = Math.round((stats.mastered / stats.total) * 100)
+  const pct = Math.round((stats.mastered / Math.max(1, stats.total)) * 100)
+  const pillBase: CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: 10,
+    borderRadius: 999, border: `1px solid ${t.border}`, background: t.surface2,
+  }
 
   if (t.id === 'quest') {
     const level = Math.max(1, Math.floor((stats.mastered / Math.max(1, stats.total)) * 10) + 1)
+    const xp = stats.mastered * 50
+    const xpNext = level * 300
+    const xpPct = Math.min(100, Math.round((xp % xpNext) / xpNext * 100))
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 11px', background: t.popSoft, border: `1px solid ${t.pop}`, borderRadius: t.radius }}>
-        <span style={{ fontFamily: t.fontHead, fontSize: 12, fontWeight: 700, color: t.pop }}>Lv.{level}</span>
-        <div style={{ width: 48, height: 4, background: t.border, borderRadius: 999, overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: t.pop }} />
+      <div style={{ ...pillBase, padding: '7px 14px 7px 7px' }}>
+        <span style={{ padding: '5px 9px', borderRadius: 7, background: t.pop, color: t.popInk, fontFamily: t.fontHead, fontSize: 12, fontWeight: 700 }}>
+          Lv {level}
+        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 96 }}>
+          <div style={{ height: 5, borderRadius: 999, background: t.border, overflow: 'hidden' }}>
+            <div style={{ width: `${xpPct}%`, height: '100%', background: t.pop, borderRadius: 999 }} />
+          </div>
+          <span style={{ fontFamily: t.fontBody, fontSize: 10.5, fontWeight: 600, color: t.inkFaint, letterSpacing: '.02em' }}>
+            {xp.toLocaleString()} / {xpNext.toLocaleString()} XP
+          </span>
         </div>
-        <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 600, color: t.inkFaint }}>{pct}%</span>
       </div>
     )
   }
 
   if (t.id === 'school') {
-    const grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : pct >= 50 ? 'C' : 'F'
+    const h = (dateHash(3) % 2)
+    const m = (dateHash(4) % 59) + 1
+    const countdown = `${h > 0 ? h + ':' : ''}${String(m).padStart(2, '0')}:${String(dateHash(5) % 59).padStart(2, '0')}`
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 11px', background: t.surface2, border: `1px solid ${t.border}`, borderRadius: t.radius }}>
-        <span style={{ fontFamily: t.fontHead, fontSize: 11, fontWeight: 600, color: t.inkSoft, letterSpacing: '.02em' }}>Grade</span>
-        <span style={{ fontFamily: t.fontHead, fontSize: 15, fontWeight: 700, color: t.pop }}>{grade}</span>
-        <span style={{ fontFamily: t.fontBody, fontSize: 11, color: t.inkFaint }}>{stats.mastered}/{stats.total}</span>
+      <div style={{ ...pillBase, padding: '6px 14px 6px 6px' }}>
+        <span style={{
+          width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: t.pop, color: '#fff', fontFamily: t.fontBody, fontSize: 13, fontWeight: 700,
+        }}>FR</span>
+        <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+          <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: t.inkFaint }}>Next lesson</span>
+          <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 600, color: t.pop }}>in {countdown}</span>
+        </span>
       </div>
     )
   }
 
+  // neutral
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 11px', background: t.surface2, border: `1px solid ${t.border}`, borderRadius: t.radius }}>
-      <span style={{ fontFamily: t.fontBody, fontSize: 13, fontWeight: 700, color: t.ink }}>
-        {stats.mastered}<span style={{ color: t.inkFaint, fontWeight: 500, fontSize: 11 }}>/{stats.total}</span>
-      </span>
-      <div style={{ width: 44, height: 4, background: t.border, borderRadius: 999, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: t.pop, borderRadius: 999 }} />
+    <div style={{ ...pillBase, padding: '8px 14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontFamily: t.fontBody, fontSize: 12.5, fontWeight: 600, color: t.ink, whiteSpace: 'nowrap' }}>
+          {stats.mastered} / {stats.total}
+        </span>
+        <div style={{ width: 96, height: 5, borderRadius: 999, background: t.border, overflow: 'hidden' }}>
+          <div style={{ width: `${pct}%`, height: '100%', background: t.pop, borderRadius: 999 }} />
+        </div>
       </div>
     </div>
   )

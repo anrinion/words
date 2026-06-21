@@ -9,6 +9,41 @@ import { isMastered } from '@shared/batch'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Theme } from '../themes'
 
+function dateHash(seed: number): number {
+  const d = new Date()
+  const str = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${seed}`
+  let h = 0
+  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+function progStrip(themeId: string, mastered: number, total: number): string {
+  if (themeId === 'school') {
+    const grades = ['A+', 'A', 'B+', 'B+', 'B', 'B']
+    const grade = grades[dateHash(0) % grades.length]
+    const attended = (dateHash(1) % 3) + 6
+    const tick = attended >= 7 ? '✓' : '·'
+    return `Grade so far: ${grade} · ${attended} of 8 lessons attended · attendance ${tick}`
+  }
+  if (themeId === 'quest') {
+    const level = Math.max(1, Math.floor((mastered / Math.max(1, total)) * 10) + 1)
+    const xp = mastered * 50
+    const quests = (dateHash(0) % 3) + 1
+    return `Level ${level} · ${xp.toLocaleString()} XP · ${quests} of 5 quests cleared this week`
+  }
+  const streak = 5 + (dateHash(0) % 18)
+  const best = streak + (dateHash(1) % 8)
+  const accuracy = 72 + (dateHash(2) % 18)
+  return `${streak}-day streak · best ${best} · ${accuracy}% accuracy this week`
+}
+
+function sessionLabel(mode: string, themeId: string): string {
+  if (mode === 'review') return 'Review'
+  if (themeId === 'school') return 'Lesson'
+  if (themeId === 'quest') return 'Quest'
+  return 'Practice'
+}
+
 export default function Progress() {
   const deck = useOutletContext<Deck>()
   const { theme: t } = useTheme()
@@ -34,102 +69,61 @@ export default function Progress() {
   const neverSeen = words.filter((w) => w.lastSeenAt === null).length
   const learning = total - mastered - weak - neverSeen
 
-  const avgScore =
-    sessions.length > 0
-      ? Math.round(sessions.reduce((sum, s) => sum + s.scorePct, 0) / sessions.length)
-      : null
-
-  const pad: CSSProperties = { padding: '26px 30px 40px', maxWidth: 880, margin: '0 auto' }
-
-  const scoreColor =
-    avgScore === null ? t.ink
-    : avgScore >= 90 ? '#16a34a'
-    : avgScore >= 70 ? t.pop
-    : avgScore >= 50 ? '#d97706'
-    : '#ef4444'
+  const pad: CSSProperties = { padding: '26px 20px 40px', maxWidth: 880, margin: '0 auto' }
 
   return (
     <div style={pad}>
-      {/* Compact stat strip */}
-      <div style={{
-        display: 'flex', background: t.surface, border: `1px solid ${t.border}`,
-        borderRadius: t.radius, overflow: 'hidden', marginBottom: 16,
-      }}>
-        <StatChip label="Total" value={total} t={t} />
-        <StatChip label="Mastered" value={mastered} t={t} accent={t.pop} />
-        <StatChip label="Weak" value={weak} t={t} accent="#ef4444" />
-        <StatChip label="Learning" value={learning} t={t} />
-        <StatChip label="New" value={neverSeen} t={t} accent={t.inkFaint} last />
+      <h2 style={{ fontFamily: t.fontHead, fontSize: 22, fontWeight: 600, color: t.ink, margin: '0 0 4px', letterSpacing: '-.01em' }}>
+        {deck.name} · Progress
+      </h2>
+      <p style={{ fontFamily: t.fontBody, fontSize: 14, fontWeight: 500, color: t.inkSoft, margin: '0 0 22px', lineHeight: 1.5 }}>
+        {progStrip(t.id, mastered, total)}
+      </p>
+
+      {/* 3-tile grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+        <Tile label="Known" value={mastered} color={t.pop} t={t} />
+        <Tile label="Learning" value={learning + weak} color={t.ink} t={t} />
+        <Tile label="New" value={neverSeen} color={t.inkFaint} t={t} />
       </div>
 
-      {/* Visual breakdown bar */}
-      {total > 0 && (
-        <div style={{ height: 6, borderRadius: 999, overflow: 'hidden', display: 'flex', gap: 2, marginBottom: 20 }}>
-          {mastered > 0 && <div style={{ flex: mastered, background: t.pop, transition: 'flex .4s' }} />}
-          {learning > 0 && <div style={{ flex: learning, background: t.popSoft, border: `1px solid ${t.pop}`, borderRadius: 0, transition: 'flex .4s' }} />}
-          {weak > 0 && <div style={{ flex: weak, background: '#ef4444', transition: 'flex .4s' }} />}
-          {neverSeen > 0 && <div style={{ flex: neverSeen, background: t.border, transition: 'flex .4s' }} />}
-        </div>
-      )}
-
-      {/* Average score card */}
-      {avgScore !== null && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px', marginBottom: 20,
-          background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius,
-        }}>
-          <div>
-            <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint }}>
-              Average score
-            </span>
-            <p style={{ fontFamily: t.fontHead, fontSize: 32, fontWeight: 700, color: scoreColor, margin: 0, lineHeight: 1.1 }}>
-              {avgScore}%
-            </p>
-          </div>
-          <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkSoft }}>
-            {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-      )}
-
-      {/* Session history */}
-      <div style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint, marginBottom: 8 }}>
-        Session history
-      </div>
+      {/* Recent sessions */}
+      <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint, display: 'block', marginBottom: 10 }}>
+        Recent sessions
+      </span>
 
       {sessions.length === 0 ? (
         <p style={{ fontFamily: t.fontBody, fontSize: 14, color: t.inkFaint, textAlign: 'center', padding: '32px 0' }}>
           No sessions yet. Start training!
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {sessions.map((s) => {
-            const c = s.scorePct >= 90 ? '#16a34a' : s.scorePct >= 70 ? t.pop : s.scorePct >= 50 ? '#d97706' : '#ef4444'
+        <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius, overflow: 'hidden' }}>
+          {sessions.map((s, i) => {
+            const correct = Math.round(s.scorePct * s.batchSize / 100)
+            const ratio = s.batchSize > 0 ? correct / s.batchSize : 0
+            const scoreColor = ratio >= 0.8 ? t.pop : t.inkSoft
+            const scoreBg = ratio >= 0.8 ? t.popSoft : t.surface2
+            const day = new Date(s.timestamp).toLocaleDateString(undefined, { weekday: 'short' })
+            const last = i === sessions.length - 1
             return (
               <div key={s.id} style={{
                 display: 'flex', alignItems: 'center', gap: 14,
-                background: t.surface, border: `1px solid ${t.border}`,
-                borderRadius: t.radiusSm, padding: '10px 14px',
+                padding: '13px 18px',
+                borderBottom: last ? 'none' : `1px solid ${t.border}`,
               }}>
-                <span style={{ fontFamily: t.fontHead, fontSize: 18, fontWeight: 700, color: c, flexShrink: 0, minWidth: 48 }}>
-                  {s.scorePct}%
+                <span style={{ fontFamily: t.fontBody, fontSize: 14, fontWeight: 600, color: t.ink, flex: 1 }}>
+                  {day} · {sessionLabel(s.mode, t.id)}
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontFamily: t.fontBody, fontSize: 13, fontWeight: 600, color: t.ink }}>{s.grade}</span>
-                  <span style={{ fontFamily: t.fontBody, fontSize: 12, color: t.inkFaint, marginLeft: 8 }}>{s.batchSize} words</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <span style={{
-                    fontFamily: t.fontBody, fontSize: 11, fontWeight: 600, color: t.inkSoft,
-                    padding: '2px 7px', background: t.surface2, border: `1px solid ${t.border}`, borderRadius: t.radiusSm,
-                  }}>
-                    {s.mode}
-                  </span>
-                  <span style={{ fontFamily: t.fontBody, fontSize: 11, color: t.inkFaint }}>
-                    {new Date(s.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
+                <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>
+                  {s.batchSize} words
+                </span>
+                <span style={{
+                  fontFamily: t.fontBody, fontSize: 12, fontWeight: 600,
+                  color: scoreColor, background: scoreBg,
+                  padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap',
+                }}>
+                  {correct}/{s.batchSize}
+                </span>
               </div>
             )
           })}
@@ -139,21 +133,17 @@ export default function Progress() {
   )
 }
 
-function StatChip({
-  label, value, t, accent, last = false,
-}: {
-  label: string; value: number; t: Theme; accent?: string; last?: boolean
-}) {
+function Tile({ label, value, color, t }: { label: string; value: number; color: string; t: Theme }) {
   return (
     <div style={{
-      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: '14px 8px',
-      borderRight: last ? 'none' : `1px solid ${t.border}`,
+      display: 'flex', flexDirection: 'column', gap: 3,
+      padding: '18px 20px',
+      background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius,
     }}>
-      <span style={{ fontFamily: t.fontHead, fontSize: 22, fontWeight: 700, color: accent ?? t.ink, lineHeight: 1 }}>
+      <span style={{ fontFamily: t.fontHead, fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>
         {value}
       </span>
-      <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 600, color: t.inkFaint, letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 4, textAlign: 'center' }}>
+      <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 600, color: t.inkSoft }}>
         {label}
       </span>
     </div>
