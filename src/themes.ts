@@ -21,12 +21,20 @@ export interface Theme {
   trainTitle: string
   trainLead: string
   startCta: string
+  // Semantic colours
+  danger: string        // destructive action (delete)
+  dangerSoft: string    // danger icon background tint
+  statusNew: string     // unseen word indicator
+  statusWeak: string    // problematic word indicator
+  statusMastered: string // learned word indicator
+  toastBg: string       // toast notification background
+  toastAction: string   // toast undo/action button colour
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
   neutral: {
     id: 'neutral', label: 'Neutral',
-    appBg: '#ffffff', surface: '#ffffff', surface2: '#f6f6f3',
+    appBg: '#f4f4f6', surface: '#ffffff', surface2: '#f6f6f3',
     ink: '#15171c', inkSoft: '#565b64', inkFaint: '#9a9ea7',
     border: '#ecebe7', pop: '#2f63ff', popInk: '#ffffff', popSoft: '#edf2ff',
     radius: '12px', radiusSm: '9px',
@@ -36,6 +44,9 @@ export const THEMES: Record<ThemeId, Theme> = {
     trainTitle: "Today's session",
     trainLead: 'A quick pass through your words.',
     startCta: 'Start session',
+    danger: '#dc5360', dangerSoft: 'rgba(220,83,96,.12)',
+    statusNew: '#9aa0ac', statusWeak: '#e0a23a', statusMastered: '#3fae86',
+    toastBg: '#23232b', toastAction: '#a8a2ff',
   },
   school: {
     id: 'school', label: 'School',
@@ -49,6 +60,9 @@ export const THEMES: Record<ThemeId, Theme> = {
     trainTitle: 'Homework',
     trainLead: 'Clear these before the lesson bell rings.',
     startCta: 'Start homework',
+    danger: '#b91c1c', dangerSoft: 'rgba(185,28,28,.12)',
+    statusNew: '#a8a29e', statusWeak: '#d97706', statusMastered: '#16a34a',
+    toastBg: '#292524', toastAction: '#c4b5fd',
   },
   quest: {
     id: 'quest', label: 'Quest',
@@ -62,5 +76,8 @@ export const THEMES: Record<ThemeId, Theme> = {
     trainTitle: 'Active quests',
     trainLead: 'Clear the words to push the main quest forward.',
     startCta: 'Start run',
+    danger: '#f87171', dangerSoft: 'rgba(248,113,113,.14)',
+    statusNew: '#6b7280', statusWeak: '#f59e0b', statusMastered: '#22c55e',
+    toastBg: '#1d2330', toastAction: '#818cf8',
   },
 }

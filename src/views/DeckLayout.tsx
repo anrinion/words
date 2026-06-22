@@ -132,7 +132,7 @@ export default function DeckLayout() {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <header style={{
           flexShrink: 0, display: 'flex', alignItems: 'center', gap: 18,
-          padding: isDesktop ? '14px 22px' : '18px 16px 13px',
+          padding: isDesktop ? '7px 22px' : '14px 16px 10px',
           background: t.surface, borderBottom: `1px solid ${t.border}`,
         }}>
 

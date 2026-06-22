@@ -40,6 +40,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     r.setProperty('--radius-sm', theme.radiusSm)
     r.setProperty('--font-head', theme.fontHead)
     r.setProperty('--font-body', theme.fontBody)
+    r.setProperty('--danger', theme.danger)
+    r.setProperty('--danger-soft', theme.dangerSoft)
+    r.setProperty('--status-new', theme.statusNew)
+    r.setProperty('--status-weak', theme.statusWeak)
+    r.setProperty('--status-mastered', theme.statusMastered)
+    r.setProperty('--toast-bg', theme.toastBg)
+    r.setProperty('--toast-action', theme.toastAction)
     document.body.style.background = theme.appBg
     document.body.style.color = theme.ink
     document.body.style.fontFamily = theme.fontBody
