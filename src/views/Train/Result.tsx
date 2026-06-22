@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, CSSProperties } from 'react'
 import type { Word } from '@shared/types'
-import { wordsApi } from '../../api/words'
+import { useTheme } from '../../contexts/ThemeContext'
 
 interface ExamAnswer {
   wordId: string
@@ -17,9 +17,7 @@ interface ResultData {
 export default function Result({
   batch,
   result,
-  deckId,
   onDone,
-  onAgain,
 }: {
   batch: Word[]
   result: ResultData
@@ -27,115 +25,142 @@ export default function Result({
   onDone: () => void
   onAgain: () => void
 }) {
-  const wordMap = new Map(batch.map((w) => [w.id, w]))
-  const [overrides, setOverrides] = useState<Map<string, 'correct' | 'weak'>>(new Map())
+  const { theme: t } = useTheme()
+  const wordMap = new Map(batch.map(w => [w.id, w]))
+  const [solidShown, setSolidShown] = useState(false)
 
-  const correct = result.answers.filter((a) => {
-    const ov = overrides.get(a.wordId)
-    return ov === 'correct' || (a.matched && ov !== 'weak')
-  }).length
+  const solidWords = result.answers
+    .filter(a => a.matched)
+    .map(a => wordMap.get(a.wordId))
+    .filter((w): w is Word => !!w)
+
+  const revisitWords = result.answers
+    .filter(a => !a.matched)
+    .map(a => wordMap.get(a.wordId))
+    .filter((w): w is Word => !!w)
+
   const total = result.answers.length
+  const solidCount = solidWords.length
+  const revisitCount = revisitWords.length
 
-  const gradeColor =
-    result.scorePct >= 90 ? '#16a34a'
-    : result.scorePct >= 70 ? '#2563eb'
-    : result.scorePct >= 50 ? '#d97706'
-    : '#ef4444'
+  const headline =
+    solidCount >= Math.ceil(total * 0.8) ? 'Brilliant — that really stuck!' :
+    solidCount >= Math.ceil(total * 0.5) ? 'Nice work today!' :
+    solidCount >= 1 ? 'Good start — that\'s how it builds.' :
+    'You showed up — that\'s the hard part.'
 
-  async function markCorrect(wordId: string) {
-    await wordsApi.update(deckId, wordId, { weak: 0, streak: 1 })
-    setOverrides((m) => new Map(m).set(wordId, 'correct'))
+  const doneBtn: CSSProperties = {
+    width: '100%', padding: 15, borderRadius: 14, border: 'none',
+    background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
+    cursor: 'pointer', fontFamily: t.fontBody, marginTop: 28,
+    boxShadow: `0 2px 8px ${t.pop}46`,
   }
-
-  async function markWeak(wordId: string) {
-    await wordsApi.update(deckId, wordId, { weak: 1, streak: 0 })
-    setOverrides((m) => new Map(m).set(wordId, 'weak'))
-  }
+  const wordRow = (i: number, tint?: string): CSSProperties => ({
+    display: 'grid', gridTemplateColumns: '1fr 1fr',
+    alignItems: 'center', gap: 12, padding: '12px 16px',
+    borderTop: i === 0 ? 'none' : `1px solid ${tint ? tint + '33' : t.border}`,
+  })
 
   return (
-    <div className="p-4">
-      {/* Score summary */}
-      <div className="text-center py-6 mb-4">
-        <p className="text-5xl font-bold mb-1" style={{ color: gradeColor }}>{result.scorePct}%</p>
-        <p className="text-lg font-semibold" style={{ color: gradeColor }}>{result.grade}</p>
-        <p className="text-sm mt-1 text-[var(--ink-soft)]">
-          {correct} / {total} correct
-          {overrides.size > 0 && <span className="text-[var(--ink-faint)]"> (with overrides)</span>}
+    <div style={{ padding: '26px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
+
+      {/* Hero */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <div style={{
+          width: 66, height: 66, borderRadius: '50%',
+          background: `${t.statusMastered}18`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: t.statusMastered,
+        }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+        <h2 style={{ fontSize: 27, fontWeight: 700, color: t.ink, margin: '18px 0 4px', letterSpacing: '-.01em', fontFamily: t.fontHead }}>
+          {headline}
+        </h2>
+        <p style={{ fontSize: 15, color: t.inkSoft, margin: 0, fontFamily: t.fontBody }}>
+          You reviewed <strong style={{ color: t.ink }}>{total} words</strong> today.
         </p>
+
+        {/* Stat pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 16 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusMastered, flexShrink: 0 }} />
+            {solidCount} feel solid
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusWeak, flexShrink: 0 }} />
+            {revisitCount} worth another look
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{ width: '100%', maxWidth: 320, height: 8, borderRadius: 99, background: t.surface2, marginTop: 16, overflow: 'hidden' }}>
+          <div style={{
+            width: `${total > 0 ? Math.round(solidCount / total * 100) : 0}%`,
+            height: '100%', borderRadius: 99, background: t.statusMastered,
+            transition: 'width .5s ease',
+          }} />
+        </div>
       </div>
 
-      {/* Per-word breakdown */}
-      <div className="space-y-2 mb-6">
-        {result.answers.map((answer) => {
-          const word = wordMap.get(answer.wordId)
-          if (!word) return null
-          const ov = overrides.get(answer.wordId)
-          const isCorrect = ov === 'correct' || (answer.matched && ov !== 'weak')
-          const isWeak = ov === 'weak'
-
-          const bgColor = isWeak
-            ? 'rgba(249,115,22,.1)' : isCorrect
-            ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)'
-          const borderColor = isWeak
-            ? 'rgba(249,115,22,.3)' : isCorrect
-            ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'
-          const iconColor = isWeak ? '#f97316' : isCorrect ? '#16a34a' : '#ef4444'
-
-          return (
-            <div
-              key={answer.wordId}
-              className="rounded-lg px-3 py-2.5"
-              style={{ background: bgColor, border: `1px solid ${borderColor}` }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium shrink-0" style={{ color: iconColor }}>
-                  {isWeak ? '⚑' : isCorrect ? '✓' : '✗'}
-                </span>
-                <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                  <span className="text-right text-sm font-medium pr-3 truncate text-[var(--ink-soft)]">{word.term}</span>
-                  <span className="text-left text-[var(--ink-soft)] text-sm pl-3 truncate">{word.translation}</span>
-                </div>
-                {!ov && (
-                  answer.matched ? (
-                    <button
-                      onClick={() => markWeak(answer.wordId)}
-                      className="shrink-0 text-xs text-[var(--ink-faint)] hover:text-orange-500 px-1.5 py-0.5 rounded border border-transparent hover:border-orange-300 transition-colors"
-                      title="Flag as weak"
-                    >
-                      ⚑
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => markCorrect(answer.wordId)}
-                      className="shrink-0 text-xs text-[var(--ink-faint)] hover:text-green-600 px-1.5 py-0.5 rounded border border-transparent hover:border-green-300 transition-colors"
-                      title="Accept as correct"
-                    >
-                      ✓
-                    </button>
-                  )
-                )}
-                {ov && (
-                  <span className="shrink-0 text-xs text-[var(--ink-faint)] italic">
-                    {ov === 'correct' ? 'accepted' : 'flagged'}
-                  </span>
-                )}
+      {/* Worth another look */}
+      {revisitCount > 0 && (
+        <div style={{ marginTop: 30 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusWeak, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em', color: t.ink, fontFamily: t.fontBody }}>WORTH ANOTHER LOOK</span>
+          </div>
+          <div style={{
+            background: `${t.statusWeak}0d`, border: `1px solid ${t.statusWeak}2e`,
+            borderRadius: 14, overflow: 'hidden',
+          }}>
+            {revisitWords.map((word, i) => (
+              <div key={word.id} style={wordRow(i, t.statusWeak)}>
+                <span style={{ fontSize: 14.5, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>{word.term}</span>
+                <span style={{ fontSize: 14, color: t.inkSoft, fontFamily: t.fontBody }}>{word.translation}</span>
               </div>
-              {!isCorrect && !ov && (
-                <div className="mt-1 pl-5 text-xs space-y-0.5">
-                  <p style={{ color: '#ef4444' }}>
-                    You wrote: <span className="font-mono">{answer.rawInput || '(blank)'}</span>
-                  </p>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <div className="flex gap-2">
-        <button onClick={onDone} className="btn-secondary flex-1">Done</button>
-        <button onClick={onAgain} className="btn-primary flex-1">Again</button>
-      </div>
+      {/* Feels solid (collapsible) */}
+      {solidCount > 0 && (
+        <div style={{ marginTop: 22 }}>
+          <button
+            onClick={() => setSolidShown(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              width: '100%', background: 'none', border: 'none', padding: '0 0 10px',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusMastered, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em', color: t.ink, fontFamily: t.fontBody }}>
+                FEELS SOLID · {solidCount}
+              </span>
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: t.pop, fontFamily: t.fontBody }}>
+              {solidShown ? 'Hide' : 'View'}
+            </span>
+          </button>
+          {solidShown && (
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 14, overflow: 'hidden' }}>
+              {solidWords.map((word, i) => (
+                <div key={word.id} style={wordRow(i)}>
+                  <span style={{ fontSize: 14.5, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>{word.term}</span>
+                  <span style={{ fontSize: 14, color: t.inkSoft, fontFamily: t.fontBody }}>{word.translation}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <button onClick={onDone} style={doneBtn}>Done</button>
     </div>
   )
 }

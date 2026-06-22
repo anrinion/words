@@ -30,7 +30,6 @@ function buildPhaseList(numRounds: number): Phase[] {
     phases.push({ type: 'round', index: i })
     phases.push({ type: 'selfCheck', index: i })
   }
-  // Mobile: extra "Exam" round + checkbox marking instead of typed exam
   phases.push(...(isMobile ? (['examRound', 'examCheck'] as const) : (['exam'] as const)))
   phases.push('result')
   return phases
@@ -39,7 +38,7 @@ function buildPhaseList(numRounds: number): Phase[] {
 export interface SessionState {
   phase: Phase
   phaseList: Phase[]
-  batch: Word[] // fixed original order
+  batch: Word[]
   rounds: RoundRecord[]
   examOrder: Word[]
   examAnswers: Record<string, string>
@@ -52,10 +51,13 @@ type AppState =
   | { status: 'running'; mode: 'normal' | 'review'; session: SessionState }
   | { status: 'error'; message: string }
 
+type ModeTab = 'guided' | 'flashcards' | 'speed'
+
 export default function Train() {
   const deck = useOutletContext<Deck>()
   const [state, setState] = useState<AppState>({ status: 'idle' })
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [modeTab, setModeTab] = useState<ModeTab>('guided')
   const { setInSession } = useSessionContext()
   const { theme: t } = useTheme()
 
@@ -116,7 +118,6 @@ export default function Train() {
 
       const updated: SessionState = { ...session, ...updates, phase: nextPhase }
 
-      // Pre-populate next round's order when entering a round phase
       if (isIndexed(nextPhase) && nextPhase.type === 'round') {
         const prevOrder = updated.rounds[nextPhase.index - 1]?.orderShown.map(
           (id) => session.batch.find((w) => w.id === id)!,
@@ -127,7 +128,6 @@ export default function Train() {
         updated.rounds = rounds
       }
 
-      // Pre-populate exam order when entering exam or mobile exam round
       if (nextPhase === 'exam' || nextPhase === 'examRound') {
         const lastRoundOrder = updated.rounds[updated.rounds.length - 1].orderShown.map(
           (id) => session.batch.find((w) => w.id === id)!,
@@ -169,7 +169,7 @@ export default function Train() {
         answers: session.examOrder.map((w) => ({
           wordId: w.id,
           rawInput: answers[w.id] ?? '',
-          matched: false, // server will re-grade
+          matched: false,
         })),
         scorePct: 0,
         grade: '',
@@ -204,19 +204,21 @@ export default function Train() {
     }
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Idle / Home ──────────────────────────────────────────────────────────────
 
   if (state.status === 'idle') {
-    const pad: CSSProperties = { padding: '26px 30px 40px', maxWidth: 880, margin: '0 auto' }
-    const kicker: CSSProperties = { fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.11em', textTransform: 'uppercase', color: t.pop, display: 'block', marginBottom: 9 }
-    const h2: CSSProperties = { fontFamily: t.fontHead, fontSize: 22, fontWeight: 600, color: t.ink, margin: '0 0 6px', letterSpacing: '-.01em' }
-    const lead: CSSProperties = { fontFamily: t.fontBody, fontSize: 14, fontWeight: 500, color: t.inkSoft, margin: '0 0 22px', lineHeight: 1.5 }
-    const outlineCard: CSSProperties = { background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius, overflow: 'hidden', margin: '18px 0 22px' }
-    const outRow = (last: boolean): CSSProperties => ({ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderBottom: last ? 'none' : `1px solid ${t.border}` })
-    const outNum = (pop?: boolean): CSSProperties => ({ width: 26, height: 26, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: pop ? t.pop : t.surface2, color: pop ? t.popInk : t.inkSoft, fontFamily: t.fontBody, fontSize: 12, fontWeight: 700 })
-    const outLabel: CSSProperties = { flex: 1, fontFamily: t.fontBody, fontSize: 15, fontWeight: 600, color: t.ink }
-    const primaryBtn: CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '14px 24px', marginTop: 2, border: 'none', borderRadius: t.radius, background: t.pop, color: t.popInk, fontFamily: t.fontBody, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'filter .15s', width: '100%' }
-    const secondaryBtn: CSSProperties = { ...primaryBtn, background: t.surface2, color: t.inkSoft, border: `1px solid ${t.border}` }
+    const pad: CSSProperties = { padding: '26px 22px 60px', maxWidth: 680, margin: '0 auto', width: '100%' }
+    const primaryBtn: CSSProperties = {
+      width: '100%', padding: 15, borderRadius: 14, border: 'none',
+      background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
+      cursor: 'pointer', fontFamily: t.fontBody, marginTop: 10,
+      boxShadow: `0 2px 8px ${t.pop}46`,
+    }
+    const secondaryBtn: CSSProperties = {
+      ...primaryBtn, background: t.surface, color: t.ink,
+      border: `1px solid ${t.border}`, boxShadow: 'none',
+    }
+    const disabledPrimary: CSSProperties = { ...primaryBtn, opacity: 0.5, pointerEvents: 'none' }
 
     if (state.emptyReason) {
       return (
@@ -229,82 +231,212 @@ export default function Train() {
       )
     }
 
+    const steps = [
+      { label: 'Warm-up', desc: 'read through' },
+      { label: 'Practice', desc: '2 rounds · self-check' },
+      { label: 'Recall', desc: 'from memory' },
+    ]
+
+    type TileConfig = { id: ModeTab; label: string; tagline: string; soon?: true; icon: JSX.Element }
+    const tiles: TileConfig[] = [
+      {
+        id: 'guided', label: 'Guided session', tagline: 'Read, practice, recall — the full loop.',
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h10" />
+          </svg>
+        ),
+      },
+      {
+        id: 'flashcards', label: 'Flashcards', tagline: 'Flip through at your own pace.', soon: true,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="5" width="14" height="14" rx="2" />
+            <path d="M7 5V3.5A1.5 1.5 0 0 1 8.5 2H20a1 1 0 0 1 1 1v12a1.5 1.5 0 0 1-1.5 1.5H18" />
+          </svg>
+        ),
+      },
+      {
+        id: 'speed', label: 'Speed match', tagline: 'Match pairs against the clock.', soon: true,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H13z" />
+          </svg>
+        ),
+      },
+    ]
+
     return (
       <div style={pad}>
-        <span style={kicker}>Train</span>
-        <h2 style={h2}>{t.trainTitle}</h2>
-        <p style={lead}>{t.trainLead}</p>
+        <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop, display: 'block', marginBottom: 9 }}>
+          TRAIN
+        </span>
+        <h2 style={{ fontFamily: t.fontHead, fontSize: 28, fontWeight: 700, color: t.ink, margin: '0 0 6px', letterSpacing: '-.01em' }}>
+          {t.trainTitle}
+        </h2>
+        <p style={{ fontFamily: t.fontBody, fontSize: 15, color: t.inkSoft, margin: '0 0 26px', lineHeight: 1.5 }}>
+          {t.trainLead}
+        </p>
 
-        {/* Neutral: "Due today" banner */}
+        {/* Theme-specific panel */}
         {t.id === 'neutral' && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '18px 20px', marginBottom: 4, background: t.surface, border: `1px solid ${t.border}`, borderLeft: `4px solid ${t.pop}`, borderRadius: t.radius }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', marginBottom: 20, background: t.surface, border: `1px solid ${t.border}`, borderLeft: `4px solid ${t.pop}`, borderRadius: t.radius }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint }}>Ready to start</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 22, fontWeight: 700, color: t.ink }}>{deck.name}</span>
+              <span style={{ fontFamily: t.fontHead, fontSize: 20, fontWeight: 700, color: t.ink }}>{deck.name}</span>
             </div>
-            <span style={{ fontFamily: t.fontBody, fontSize: 14, color: t.inkSoft, maxWidth: 200 }}>A quick pass keeps them from slipping.</span>
+            <span style={{ fontFamily: t.fontBody, fontSize: 13.5, color: t.inkSoft, marginLeft: 'auto', maxWidth: 180, textAlign: 'right' }}>A quick pass keeps them from slipping.</span>
           </div>
         )}
 
-        {/* School: teacher panel */}
         {t.id === 'school' && (
-          <div style={{ display: 'flex', gap: 15, padding: '20px 22px', marginBottom: 4, background: '#2b382f', borderRadius: t.radius, color: '#eadfca' }}>
-            <span style={{ width: 46, height: 46, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.pop, color: '#fff', fontFamily: t.fontBody, fontSize: 15, fontWeight: 700 }}>FR</span>
+          <div style={{ display: 'flex', gap: 14, padding: '18px 20px', marginBottom: 20, background: '#2b382f', borderRadius: t.radius, color: '#eadfca' }}>
+            <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.pop, color: '#fff', fontFamily: t.fontBody, fontSize: 14, fontWeight: 700 }}>FR</span>
             <div style={{ flex: 1 }}>
-              <span style={{ fontFamily: t.fontHead, fontSize: 13, color: '#cdbf9c', letterSpacing: '.02em' }}>Frau Richter</span>
-              <p style={{ fontFamily: t.fontHead, fontSize: 15, fontStyle: 'italic', color: '#f2ead6', margin: '5px 0 0', lineHeight: 1.5 }}>
+              <span style={{ fontFamily: t.fontHead, fontSize: 12.5, color: '#cdbf9c', letterSpacing: '.02em' }}>Frau Richter</span>
+              <p style={{ fontFamily: t.fontHead, fontSize: 14.5, fontStyle: 'italic', color: '#f2ead6', margin: '4px 0 0', lineHeight: 1.5 }}>
                 "We review the vocabulary today. I expect all words before the bell — no excuses, bitte."
               </p>
             </div>
           </div>
         )}
 
-        {/* Quest: main quest + side quest */}
         {t.id === 'quest' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 13, marginBottom: 4 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, padding: '18px 20px', background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 12, marginBottom: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, padding: '16px 18px', background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius }}>
               <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.inkFaint }}>Main Quest</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 17, fontWeight: 700, color: t.ink }}>Master {deck.name}</span>
-              <div style={{ height: 7, borderRadius: 999, background: t.border, overflow: 'hidden', marginTop: 4 }}>
+              <span style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink }}>Master {deck.name}</span>
+              <div style={{ height: 7, borderRadius: 999, background: t.border, overflow: 'hidden', marginTop: 2 }}>
                 <div style={{ width: '35%', height: '100%', background: t.pop, borderRadius: 999 }} />
               </div>
               <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 600, color: t.inkFaint }}>Keep training to level up</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '18px 20px', background: t.popSoft, border: `1px solid ${t.pop}`, borderRadius: t.radius }}>
-              <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop }}>⚡ Side Quest · live</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 15, fontWeight: 700, color: t.ink, lineHeight: 1.3 }}>Finish this session under 2:00</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '16px 18px', background: t.popSoft, border: `1px solid ${t.pop}`, borderRadius: t.radius }}>
+              <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop }}>⚡ Side Quest</span>
+              <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 700, color: t.ink, lineHeight: 1.35 }}>Finish under 2:00</span>
               <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 700, color: t.pop }}>Reward +150 XP</span>
             </div>
           </div>
         )}
 
-        {/* Session outline */}
-        <div style={outlineCard}>
-          <div style={outRow(false)}>
-            <span style={outNum()}>1</span>
-            <span style={outLabel}>Read-through</span>
-            <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>all words</span>
-          </div>
-          <div style={outRow(false)}>
-            <span style={outNum()}>2</span>
-            <span style={outLabel}>Practice rounds</span>
-            <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>self-check</span>
-          </div>
-          <div style={outRow(true)}>
-            <span style={outNum(true)}>{t.id === 'quest' ? '⚔' : '3'}</span>
-            <span style={outLabel}>{t.examLabel}</span>
-            <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>final check</span>
-          </div>
+        {/* Mode picker label */}
+        <div style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', color: t.inkSoft, marginBottom: 11 }}>
+          CHOOSE A MODE
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => startSession('normal')} style={{ ...primaryBtn, opacity: settings ? 1 : 0.5, pointerEvents: settings ? 'auto' : 'none' }}>
-            {t.startCta} →
-          </button>
-          <button onClick={() => startSession('review')} style={{ ...secondaryBtn, opacity: settings ? 1 : 0.5, pointerEvents: settings ? 'auto' : 'none' }}>
-            Review weak words
-          </button>
+        {/* Mode tile cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 11, marginBottom: 22 }}>
+          {tiles.map(tile => {
+            const active = modeTab === tile.id
+            return (
+              <button
+                key={tile.id}
+                onClick={() => !tile.soon && setModeTab(tile.id)}
+                style={{
+                  textAlign: 'left', cursor: tile.soon ? 'default' : 'pointer',
+                  padding: 15, borderRadius: 15, background: t.surface,
+                  border: `1.5px solid ${active ? t.pop : t.border}`,
+                  boxShadow: active ? `0 0 0 3px ${t.pop}1f` : 'none',
+                  transition: 'all .14s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+                    background: tile.id === 'guided' ? `${t.pop}17` : t.surface2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: tile.id === 'guided' ? t.pop : t.ink,
+                  }}>
+                    {tile.icon}
+                  </div>
+                  {tile.soon && (
+                    <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.04em', color: t.inkFaint, background: t.surface2, padding: '3px 7px', borderRadius: 6 }}>
+                      Soon
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontFamily: t.fontBody, fontSize: 14.5, fontWeight: 700, color: tile.soon ? t.inkSoft : t.ink, marginTop: 12 }}>
+                  {tile.label}
+                </div>
+                <div style={{ fontFamily: t.fontBody, fontSize: 12.5, color: t.inkFaint, lineHeight: 1.4, marginTop: 3 }}>
+                  {tile.tagline}
+                </div>
+              </button>
+            )
+          })}
         </div>
+
+        {/* Guided mode detail */}
+        {modeTab === 'guided' && (
+          <>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${t.border}` }}>
+                <div>
+                  <div style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: t.inkSoft }}>READY WHEN YOU ARE</div>
+                  <div style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink, marginTop: 3 }}>{deck.name}</div>
+                </div>
+              </div>
+              <div style={{ padding: '6px 8px' }}>
+                {steps.map((step, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '12px 12px' }}>
+                    <span style={{
+                      width: 26, height: 26, flexShrink: 0, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: i === 0 ? `${t.pop}17` : t.surface2,
+                      color: i === 0 ? t.pop : t.inkSoft,
+                      fontFamily: t.fontBody, fontSize: 12, fontWeight: 700,
+                    }}>
+                      {i + 1}
+                    </span>
+                    <span style={{ flex: 1, fontFamily: t.fontBody, fontSize: 14.5, fontWeight: 600, color: t.ink }}>{step.label}</span>
+                    <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkSoft }}>{step.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => startSession('normal')}
+              style={settings ? primaryBtn : disabledPrimary}
+            >
+              {t.startCta} →
+            </button>
+            <button
+              onClick={() => startSession('review')}
+              style={{
+                width: '100%', padding: '11px 14px', marginTop: 10, borderRadius: 12,
+                border: `1px solid ${t.border}`, background: 'transparent',
+                color: t.inkSoft, fontSize: 13.5, fontWeight: 500,
+                cursor: settings ? 'pointer' : 'not-allowed',
+                opacity: settings ? 1 : 0.5, fontFamily: t.fontBody,
+              }}
+            >
+              Review weak words
+            </button>
+          </>
+        )}
+
+        {/* Coming soon panel */}
+        {modeTab !== 'guided' && (
+          <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, padding: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink }}>
+                {modeTab === 'flashcards' ? 'Flashcards' : 'Speed match'}
+              </span>
+              <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.04em', color: t.inkSoft, background: t.surface2, padding: '4px 9px', borderRadius: 7 }}>
+                COMING SOON
+              </span>
+            </div>
+            <p style={{ fontFamily: t.fontBody, fontSize: 14, color: t.inkSoft, lineHeight: 1.6, margin: '12px 0 0' }}>
+              {modeTab === 'flashcards'
+                ? 'Flip a card to reveal its translation, then mark whether it stuck. A relaxed, tappable way to drill a deck.'
+                : 'Pairs of words and translations appear on a timer — tap the matches as fast as you can.'}
+            </p>
+            <button disabled style={{ width: '100%', marginTop: 20, padding: 14, borderRadius: 13, border: 'none', background: t.surface2, color: t.inkSoft, fontSize: 14.5, fontWeight: 600, cursor: 'not-allowed', fontFamily: t.fontBody }}>
+              We're still building this mode
+            </button>
+          </div>
+        )}
       </div>
     )
   }
@@ -320,7 +452,7 @@ export default function Train() {
   if (state.status === 'error') {
     return (
       <div className="flex flex-col items-center justify-center h-full px-6 text-center">
-        <p className="text-red-500 font-medium mb-2">Something went wrong</p>
+        <p style={{ color: 'var(--danger)', fontWeight: 600, marginBottom: 8, fontFamily: 'inherit' }}>Something went wrong</p>
         <p className="text-[var(--ink-soft)] text-sm mb-4">{state.message}</p>
         <button onClick={() => setState({ status: 'idle' })} className="btn-secondary">
           Back
@@ -329,47 +461,54 @@ export default function Train() {
     )
   }
 
+  // ── Running session ──────────────────────────────────────────────────────────
+
   const { session } = state
   const { phase, batch, rounds, examOrder } = session
 
-  const phaseKey = isIndexed(phase) ? phase.type : (phase as string)
-  const phaseInfo: Record<string, { seg: number; label: string }> = {
-    preview:   { seg: 0, label: 'Read-through' },
-    round:     { seg: 1, label: 'Practice' },
-    selfCheck: { seg: 1, label: 'Practice' },
-    exam:      { seg: 2, label: t.examLabel },
-    examRound: { seg: 2, label: t.examLabel },
-    examCheck: { seg: 2, label: t.examLabel },
-    result:    { seg: 3, label: 'Results' },
+  // 5-segment bar: Warm-up(0), Practice 1(1), Practice 2(2), Recall(3), Summary(4)
+  const segLabels = ['Warm-up', 'Practice 1', 'Practice 2', 'Recall', 'Summary']
+  let segIdx = 0
+  if (phase === 'preview') {
+    segIdx = 0
+  } else if (isIndexed(phase) && phase.type === 'round') {
+    segIdx = phase.index + 1
+  } else if (isIndexed(phase) && phase.type === 'selfCheck') {
+    segIdx = phase.index + 1
+  } else if (phase === 'exam' || phase === 'examRound' || phase === 'examCheck') {
+    segIdx = 3
+  } else if (phase === 'result') {
+    segIdx = 4
   }
-  const { seg: segIdx, label: stepLabel } = phaseInfo[phaseKey] ?? { seg: 0, label: '' }
 
   return (
     <div className="flex flex-col h-full">
       {/* Session bar */}
-      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px', background: t.surface, borderBottom: `1px solid ${t.border}` }}>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', background: t.surface, borderBottom: `1px solid ${t.border}` }}>
         <button
           onClick={handleExit}
-          style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 9, border: `1px solid ${t.border}`, background: t.surface2, color: t.inkSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: 32, height: 32, flexShrink: 0, borderRadius: 9, border: `1px solid ${t.border}`, background: t.surface2, color: t.inkSoft, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           title="Exit session"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
             <line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
           </svg>
         </button>
-        <div style={{ flex: 1, display: 'flex', gap: 6, alignItems: 'center' }}>
-          {[0, 1, 2, 3].map((idx) => (
+        <div style={{ flex: 1, display: 'flex', gap: 4, alignItems: 'center' }}>
+          {segLabels.map((_, idx) => (
             <div
               key={idx}
               style={{
-                flex: 1, height: 6, borderRadius: 999, transition: 'all .2s',
+                flex: 1, height: 5, borderRadius: 999, transition: 'all .25s',
                 background: idx <= segIdx ? t.pop : t.border,
                 boxShadow: idx === segIdx ? `0 0 0 3px ${t.popSoft}` : 'none',
               }}
             />
           ))}
         </div>
-        <span style={{ fontFamily: t.fontBody, fontSize: 12.5, fontWeight: 600, color: t.inkSoft, flexShrink: 0 }}>{stepLabel}</span>
+        <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 600, color: t.inkSoft, flexShrink: 0 }}>
+          {segLabels[segIdx]}
+        </span>
       </div>
 
       <div className="flex-1 overflow-y-auto">

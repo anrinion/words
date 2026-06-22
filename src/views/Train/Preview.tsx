@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, CSSProperties } from 'react'
 import type { Word } from '@shared/types'
+import { useTheme } from '../../contexts/ThemeContext'
 import AudioButton from '../../components/AudioButton'
 
 export default function Preview({
@@ -11,6 +12,7 @@ export default function Preview({
   onContinue: () => void
   onEditWord?: (wordId: string, updates: { term: string; translation: string }) => Promise<void>
 }) {
+  const { theme: t } = useTheme()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTerm, setEditTerm] = useState('')
   const [editTranslation, setEditTranslation] = useState('')
@@ -21,7 +23,6 @@ export default function Preview({
     setEditTerm(word.term)
     setEditTranslation(word.translation)
   }
-
   function cancelEdit() { setEditingId(null) }
 
   async function saveEdit() {
@@ -37,78 +38,102 @@ export default function Preview({
     if (e.key === 'Escape') cancelEdit()
   }
 
-  return (
-    <div className="p-4">
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-[var(--ink)]">Preview</h2>
-        <p className="text-sm text-[var(--ink-soft)]">
-          Read through all {batch.length} words once. No interaction needed.
-        </p>
-      </div>
+  const iconBtn: CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    width: 26, height: 26, borderRadius: 6, border: 'none',
+    background: 'transparent', color: t.inkSoft, cursor: 'pointer',
+    opacity: 0.35, flexShrink: 0,
+  }
+  const inputStyle: CSSProperties = {
+    width: '100%', padding: '8px 10px', border: `1px solid ${t.border}`,
+    borderRadius: 8, fontSize: 14, background: t.surface, color: t.ink,
+    outline: 'none', fontFamily: t.fontBody,
+  }
+  const rowBg = (i: number) => i % 2 === 1 ? t.surface2 : 'transparent'
 
-      <div className="space-y-1.5 mb-6">
-        {batch.map((word) => (
-          <div key={word.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-lg px-3 py-2.5">
+  return (
+    <div style={{ padding: '18px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
+      <h2 style={{ fontSize: 23, fontWeight: 700, color: t.ink, margin: 0, fontFamily: t.fontHead }}>Warm-up</h2>
+      <p style={{ fontSize: 14.5, color: t.inkSoft, margin: '6px 0 20px', fontFamily: t.fontBody }}>
+        Just read through. Nothing to answer — let them settle in.
+      </p>
+
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
+        {batch.map((word, i) => (
+          <div key={word.id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${t.border}` }}>
             {editingId === word.id ? (
-              <>
-                <div className="grid grid-cols-2 gap-2">
+              <div style={{ padding: '12px 18px', background: t.surface2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 10 }}>
                   <input
-                    autoFocus
-                    value={editTerm}
-                    onChange={(e) => setEditTerm(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    className="input text-sm text-right"
-                    placeholder="Term"
-                    autoCapitalize="none"
-                    autoCorrect="off"
+                    autoFocus value={editTerm}
+                    onChange={e => setEditTerm(e.target.value)} onKeyDown={onKeyDown}
+                    placeholder="Term" style={{ ...inputStyle, fontWeight: 600 }}
+                    autoCapitalize="none" autoCorrect="off"
                   />
                   <input
                     value={editTranslation}
-                    onChange={(e) => setEditTranslation(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    className="input text-sm"
-                    placeholder="Translation"
-                    autoCapitalize="none"
-                    autoCorrect="off"
+                    onChange={e => setEditTranslation(e.target.value)} onKeyDown={onKeyDown}
+                    placeholder="Translation" style={inputStyle}
+                    autoCapitalize="none" autoCorrect="off"
                   />
                 </div>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={cancelEdit} className="btn-secondary text-xs flex-1 py-1.5">Cancel</button>
-                  <button onClick={saveEdit} disabled={saving} className="btn-primary text-xs flex-1 py-1.5">Save</button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button onClick={cancelEdit} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${t.border}`, background: t.surface, color: t.ink, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: t.fontBody }}>Cancel</button>
+                  <button onClick={saveEdit} disabled={saving} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: t.pop, color: t.popInk, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: t.fontBody }}>Save</button>
                 </div>
-              </>
+              </div>
             ) : (
               <>
-                <div className="flex items-center gap-1">
-                  <div className="flex-1 grid grid-cols-2 items-center min-w-0">
-                    <div className="flex items-center justify-end gap-1 pr-3 min-w-0">
-                      <AudioButton wordId={word.id} type="word" />
-                      <span className="font-medium text-[var(--ink)] text-sm break-words">{word.term}</span>
-                    </div>
-                    <span className="text-left text-[var(--ink-soft)] text-sm pl-3 break-words">{word.translation}</span>
-                  </div>
-                  {onEditWord && (
-                    <button
-                      onClick={() => startEdit(word)}
-                      className="shrink-0 text-[var(--ink-faint)] hover:text-[var(--ink)] p-1 text-sm leading-none"
-                      title="Edit"
-                    >
-                      ✎
-                    </button>
-                  )}
+                {/* Main row: term | translation */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr',
+                  alignItems: 'center', gap: 8, padding: '9px 18px',
+                  background: rowBg(i),
+                }}>
+                  {/* Left: audio + term (right-aligned) */}
+                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                    <AudioButton wordId={word.id} type="word" />
+                    <span style={{ fontSize: 15, fontWeight: 700, color: t.ink, fontFamily: t.fontBody }}>
+                      {word.term}
+                    </span>
+                  </span>
+                  {/* Right: translation + edit button */}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 14, color: t.inkSoft, flex: 1, fontFamily: t.fontBody }}>
+                      {word.translation}
+                    </span>
+                    {onEditWord && (
+                      <button onClick={() => startEdit(word)} title="Edit" style={iconBtn}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+                        </svg>
+                      </button>
+                    )}
+                  </span>
                 </div>
-                {word.example && (
-                  <div className="mt-1.5 border-t border-[var(--border)] pt-1.5">
-                    <div className="flex items-center gap-1">
-                      <div className="flex-1 grid grid-cols-2 items-start min-w-0">
-                        <div className="flex items-start justify-end gap-1 pr-3 min-w-0">
+
+                {/* Example row: target example left | translated example right */}
+                {(word.example || word.exampleTranslation) && (
+                  <div style={{
+                    display: 'grid', gridTemplateColumns: '1fr 1fr',
+                    gap: 8, padding: '0 18px 9px',
+                    background: rowBg(i),
+                  }}>
+                    {/* Left: target-language example, right-aligned under term */}
+                    <span style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: 5 }}>
+                      {word.example && (
+                        <>
                           <AudioButton wordId={word.id} type="example" />
-                          <span className="text-xs italic text-[var(--ink-faint)] break-words">{word.example}</span>
-                        </div>
-                        <span className="text-left text-xs italic text-[var(--ink-faint)] pl-3 break-words">{word.exampleTranslation ?? ''}</span>
-                      </div>
-                      {onEditWord && <div className="shrink-0 p-1 text-sm leading-none invisible" aria-hidden>✎</div>}
-                    </div>
+                          <span style={{ fontSize: 12.5, color: t.inkSoft, lineHeight: 1.5, textAlign: 'right', fontFamily: t.fontBody }}>
+                            {word.example}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                    {/* Right: translated example, left-aligned under translation */}
+                    <span style={{ fontSize: 12.5, color: t.inkFaint, lineHeight: 1.5, fontFamily: t.fontBody }}>
+                      {word.exampleTranslation ?? ''}
+                    </span>
                   </div>
                 )}
               </>
@@ -117,8 +142,16 @@ export default function Preview({
         ))}
       </div>
 
-      <button onClick={onContinue} className="btn-primary w-full py-3">
-        Continue →
+      <button
+        onClick={onContinue}
+        style={{
+          width: '100%', padding: 15, borderRadius: 14, border: 'none',
+          background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
+          cursor: 'pointer', fontFamily: t.fontBody, marginTop: 18,
+          boxShadow: `0 2px 8px ${t.pop}46`,
+        }}
+      >
+        I've read these →
       </button>
     </div>
   )

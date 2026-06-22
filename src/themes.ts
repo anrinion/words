@@ -34,15 +34,15 @@ export interface Theme {
 export const THEMES: Record<ThemeId, Theme> = {
   neutral: {
     id: 'neutral', label: 'Neutral',
-    appBg: '#f4f4f6', surface: '#ffffff', surface2: '#f6f6f3',
+    appBg: '#f4f4f6', surface: '#ffffff', surface2: '#f8f8fb',
     ink: '#15171c', inkSoft: '#565b64', inkFaint: '#9a9ea7',
-    border: '#ecebe7', pop: '#2f63ff', popInk: '#ffffff', popSoft: '#edf2ff',
+    border: '#ecebe7', pop: '#548de8', popInk: '#ffffff', popSoft: '#eef4fd',
     radius: '12px', radiusSm: '9px',
     fontHead: "'Schibsted Grotesk', sans-serif",
     fontBody: "'Schibsted Grotesk', sans-serif",
     examLabel: 'Exam',
     trainTitle: "Today's session",
-    trainLead: 'A quick pass through your words.',
+    trainLead: 'A calm pass through your words. No grades — just what you remember and what\'s worth another look.',
     startCta: 'Start session',
     danger: '#dc5360', dangerSoft: 'rgba(220,83,96,.12)',
     statusNew: '#9aa0ac', statusWeak: '#e0a23a', statusMastered: '#3fae86',
