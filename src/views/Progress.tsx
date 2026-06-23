@@ -8,34 +8,6 @@ import { settingsApi } from '../api/settings'
 import { isMastered } from '@shared/batch'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Theme } from '../themes'
-import { dateHash } from '../lib/dateHash'
-
-function progStrip(themeId: string, mastered: number, total: number): string {
-  if (themeId === 'school') {
-    const grades = ['A+', 'A', 'B+', 'B+', 'B', 'B']
-    const grade = grades[dateHash(0) % grades.length]
-    const attended = (dateHash(1) % 3) + 6
-    const tick = attended >= 7 ? '✓' : '·'
-    return `Grade so far: ${grade} · ${attended} of 8 lessons attended · attendance ${tick}`
-  }
-  if (themeId === 'quest') {
-    const level = Math.max(1, Math.floor((mastered / Math.max(1, total)) * 10) + 1)
-    const xp = mastered * 50
-    const quests = (dateHash(0) % 3) + 1
-    return `Level ${level} · ${xp.toLocaleString()} XP · ${quests} of 5 quests cleared this week`
-  }
-  const streak = 5 + (dateHash(0) % 18)
-  const best = streak + (dateHash(1) % 8)
-  const accuracy = 72 + (dateHash(2) % 18)
-  return `${streak}-day streak · best ${best} · ${accuracy}% accuracy this week`
-}
-
-function sessionLabel(mode: string, themeId: string): string {
-  if (mode === 'review') return 'Review'
-  if (themeId === 'school') return 'Lesson'
-  if (themeId === 'quest') return 'Quest'
-  return 'Practice'
-}
 
 export default function Progress() {
   const deck = useOutletContext<Deck>()
@@ -69,12 +41,9 @@ export default function Progress() {
       <h2 style={{ fontFamily: t.fontHead, fontSize: 22, fontWeight: 600, color: t.ink, margin: '0 0 4px', letterSpacing: '-.01em' }}>
         {deck.name} · Progress
       </h2>
-      <p style={{ fontFamily: t.fontBody, fontSize: 14, fontWeight: 500, color: t.inkSoft, margin: '0 0 22px', lineHeight: 1.5 }}>
-        {progStrip(t.id, mastered, total)}
-      </p>
 
       {/* 3-tile grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, margin: '18px 0 28px' }}>
         <Tile label="Known" value={mastered} color={t.pop} t={t} />
         <Tile label="Learning" value={learning + weak} color={t.ink} t={t} />
         <Tile label="New" value={neverSeen} color={t.inkFaint} t={t} />
@@ -105,7 +74,7 @@ export default function Progress() {
                 borderBottom: last ? 'none' : `1px solid ${t.border}`,
               }}>
                 <span style={{ fontFamily: t.fontBody, fontSize: 14, fontWeight: 600, color: t.ink, flex: 1 }}>
-                  {day} · {sessionLabel(s.mode, t.id)}
+                  {day} · {s.mode === 'review' ? 'Review' : t.sessionName}
                 </span>
                 <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>
                   {s.batchSize} words

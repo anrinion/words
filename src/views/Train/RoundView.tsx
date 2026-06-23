@@ -20,13 +20,10 @@ export default function RoundView({
   const isExam = !!label
 
   const title = isExam ? label! : `Practice`
-  const subtitle = isExam
-    ? `Read through at your own pace.`
-    : `Read each translation, recall the ${roundNumber === 1 ? 'word' : 'word again'}, then reveal all at once.`
   const roundLabel = !isExam && `round ${roundNumber} of 2`
 
   return (
-    <PhaseShell title={title} subtitle={subtitle} badge={roundLabel || undefined}>
+    <PhaseShell title={title} badge={roundLabel || undefined}>
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => (
           <div

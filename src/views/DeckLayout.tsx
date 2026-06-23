@@ -5,6 +5,7 @@ import { wordsApi } from '../api/words'
 import { settingsApi } from '../api/settings'
 import SessionContext from '../contexts/SessionContext'
 import { useTheme } from '../contexts/ThemeContext'
+import { THEMES } from '../themes'
 import type { Deck, Settings } from '@shared/types'
 import ModalShell from '../components/ModalShell'
 
@@ -500,9 +501,9 @@ export function SettingsModal({ deckId, onClose }: { deckId: string; onClose: ()
           <div>
             <span style={sectionLabel}>Theme</span>
             <div style={{ display: 'flex', gap: 7 }}>
-              {(['neutral', 'school', 'quest'] as const).map((id) => (
-                <button key={id} onClick={() => setTheme(id)} style={pill(t.id === id)}>
-                  {id === 'neutral' ? 'Neutral' : id === 'school' ? 'School' : 'Quest'}
+              {Object.values(THEMES).map((th) => (
+                <button key={th.id} onClick={() => setTheme(th.id)} style={pill(t.id === th.id)}>
+                  {th.label}
                 </button>
               ))}
             </div>

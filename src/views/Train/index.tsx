@@ -9,6 +9,8 @@ import { wordsApi } from '../../api/words'
 import { useSessionContext } from '../../contexts/SessionContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { TrainButton } from '../../components/TrainButton'
+import { PreviewPanel, StorySidebar } from '../../storyPanels'
+import type { SidebarStage } from '../../storyPanels'
 import Preview from './Preview'
 import RoundView from './RoundView'
 import SelfCheck from './SelfCheck'
@@ -257,7 +259,9 @@ export default function Train() {
     ]
 
     return (
-      <div style={pad}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '0 22px' }}>
+        <div style={{ display: 'flex', gap: 32, maxWidth: 940, width: '100%', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0, padding: '26px 0 60px' }}>
         <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop, display: 'block', marginBottom: 9 }}>
           TRAIN
         </span>
@@ -268,46 +272,7 @@ export default function Train() {
           {t.trainLead}
         </p>
 
-        {/* Theme-specific panel */}
-        {t.id === 'neutral' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', marginBottom: 20, background: t.surface, border: `1px solid ${t.border}`, borderLeft: `4px solid ${t.pop}`, borderRadius: t.radius }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint }}>Ready to start</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 20, fontWeight: 700, color: t.ink }}>{deck.name}</span>
-            </div>
-            <span style={{ fontFamily: t.fontBody, fontSize: 13.5, color: t.inkSoft, marginLeft: 'auto', maxWidth: 180, textAlign: 'right' }}>A quick pass keeps them from slipping.</span>
-          </div>
-        )}
-
-        {t.id === 'school' && (
-          <div style={{ display: 'flex', gap: 14, padding: '18px 20px', marginBottom: 20, background: t.panelBg, borderRadius: t.radius, color: t.panelText }}>
-            <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.pop, color: t.popInk, fontFamily: t.fontBody, fontSize: 14, fontWeight: 700 }}>FR</span>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontFamily: t.fontHead, fontSize: 12.5, color: t.panelMeta, letterSpacing: '.02em' }}>Frau Richter</span>
-              <p style={{ fontFamily: t.fontHead, fontSize: 14.5, fontStyle: 'italic', color: t.panelText, margin: '4px 0 0', lineHeight: 1.5 }}>
-                &ldquo;We review the vocabulary today. I expect all words before the bell — no excuses, bitte.&rdquo;
-              </p>
-            </div>
-          </div>
-        )}
-
-        {t.id === 'quest' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 12, marginBottom: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, padding: '16px 18px', background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius }}>
-              <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.inkFaint }}>Main Quest</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink }}>Master {deck.name}</span>
-              <div style={{ height: 7, borderRadius: 999, background: t.border, overflow: 'hidden', marginTop: 2 }}>
-                <div style={{ width: '35%', height: '100%', background: t.pop, borderRadius: 999 }} />
-              </div>
-              <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 600, color: t.inkFaint }}>Keep training to level up</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '16px 18px', background: t.popSoft, border: `1px solid ${t.pop}`, borderRadius: t.radius }}>
-              <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop }}>⚡ Side Quest</span>
-              <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 700, color: t.ink, lineHeight: 1.35 }}>Finish under 2:00</span>
-              <span style={{ fontFamily: t.fontBody, fontSize: 12, fontWeight: 700, color: t.pop }}>Reward +150 XP</span>
-            </div>
-          </div>
-        )}
+        {isMobile && <PreviewPanel deck={deck} t={t} />}
 
         {/* Mode picker label */}
         <div style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', color: t.inkSoft, marginBottom: 11 }}>
@@ -428,6 +393,13 @@ export default function Train() {
             </button>
           </div>
         )}
+        </div>
+        {!isMobile && (
+          <div style={{ width: 240, flexShrink: 0, paddingTop: 26, position: 'sticky', top: 20 }}>
+            <StorySidebar stage="idle" deck={deck} t={t} />
+          </div>
+        )}
+        </div>
       </div>
     )
   }
@@ -502,57 +474,66 @@ export default function Train() {
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {phase === 'preview' && (
-          <Preview batch={batch} onContinue={() => advance()} onEditWord={handleEditWord} />
-        )}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minHeight: 0, overflow: 'hidden', padding: '0 22px' }}>
+        <div style={{ display: 'flex', gap: 32, maxWidth: 940, width: '100%', overflow: 'hidden' }}>
+        <div style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
+          {phase === 'preview' && (
+            <Preview batch={batch} onContinue={() => advance()} onEditWord={handleEditWord} />
+          )}
 
-        {isIndexed(phase) && phase.type === 'round' && (
-          <RoundView
-            order={rounds[phase.index]?.orderShown.map((id) => batch.find((w) => w.id === id)!).filter(Boolean) ?? []}
-            roundNumber={phase.index + 1}
-            onDone={() => advance()}
-          />
-        )}
+          {isIndexed(phase) && phase.type === 'round' && (
+            <RoundView
+              order={rounds[phase.index]?.orderShown.map((id) => batch.find((w) => w.id === id)!).filter(Boolean) ?? []}
+              roundNumber={phase.index + 1}
+              onDone={() => advance()}
+            />
+          )}
 
-        {isIndexed(phase) && phase.type === 'selfCheck' && (
-          <SelfCheck
-            batch={
-              rounds[phase.index]?.orderShown
-                .map((id) => batch.find((w) => w.id === id)!)
-                .filter(Boolean) ?? batch
-            }
-            checkNumber={phase.index + 1}
-            onDone={() => advance()}
-          />
-        )}
+          {isIndexed(phase) && phase.type === 'selfCheck' && (
+            <SelfCheck
+              batch={
+                rounds[phase.index]?.orderShown
+                  .map((id) => batch.find((w) => w.id === id)!)
+                  .filter(Boolean) ?? batch
+              }
+              checkNumber={phase.index + 1}
+              onDone={() => advance()}
+            />
+          )}
 
-        {phase === 'exam' && (
-          <Exam order={examOrder} onSubmit={submitExam} />
-        )}
+          {phase === 'exam' && (
+            <Exam order={examOrder} onSubmit={submitExam} />
+          )}
 
-        {phase === 'examRound' && (
-          <RoundView
-            order={examOrder}
-            roundNumber={0}
-            label={t.examLabel}
-            onDone={() => advance()}
-          />
-        )}
+          {phase === 'examRound' && (
+            <RoundView
+              order={examOrder}
+              roundNumber={0}
+              label={t.examLabel}
+              onDone={() => advance()}
+            />
+          )}
 
-        {phase === 'examCheck' && (
-          <ExamCheck order={examOrder} onSubmit={submitExam} />
-        )}
+          {phase === 'examCheck' && (
+            <ExamCheck order={examOrder} onSubmit={submitExam} />
+          )}
 
-        {phase === 'result' && session.result && (
-          <Result
-            batch={batch}
-            result={session.result}
-            deckId={deck.id}
-            onDone={() => setState({ status: 'idle' })}
-            onAgain={() => startSession(state.mode)}
-          />
+          {phase === 'result' && session.result && (
+            <Result
+              batch={batch}
+              result={session.result}
+              deckId={deck.id}
+              onDone={() => setState({ status: 'idle' })}
+              onAgain={() => startSession(state.mode)}
+            />
+          )}
+        </div>
+        {!isMobile && (
+          <div style={{ width: 240, flexShrink: 0, padding: '20px 0' }}>
+            <StorySidebar stage={phase as SidebarStage} deck={deck} t={t} />
+          </div>
         )}
+        </div>
       </div>
     </div>
   )

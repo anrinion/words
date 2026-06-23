@@ -45,12 +45,6 @@ export default function Result({
   const solidCount = solidWords.length
   const revisitCount = revisitWords.length
 
-  const headline =
-    solidCount >= Math.ceil(total * 0.8) ? 'Brilliant — that really stuck!' :
-    solidCount >= Math.ceil(total * 0.5) ? 'Nice work today!' :
-    solidCount >= 1 ? 'Good start — that\'s how it builds.' :
-    'You showed up — that\'s the hard part.'
-
   const wordRow = (i: number, tint?: string): CSSProperties => ({
     display: 'grid', gridTemplateColumns: '1fr 1fr',
     alignItems: 'center', gap: 12, padding: '12px 16px',
@@ -72,10 +66,7 @@ export default function Result({
             <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>
-        <h2 style={{ fontSize: 27, fontWeight: 700, color: t.ink, margin: '18px 0 4px', letterSpacing: '-.01em', fontFamily: t.fontHead }}>
-          {headline}
-        </h2>
-        <p style={{ fontSize: 15, color: t.inkSoft, margin: 0, fontFamily: t.fontBody }}>
+        <p style={{ fontSize: 15, color: t.inkSoft, margin: '18px 0 0', fontFamily: t.fontBody }}>
           You reviewed <strong style={{ color: t.ink }}>{total} words</strong> today.
         </p>
 

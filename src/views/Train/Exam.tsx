@@ -24,7 +24,7 @@ export default function Exam({
   }
 
   return (
-    <PhaseShell title="Recall" subtitle="Type what you remember. Unsure about one? Leave it blank and move on — those just become tomorrow's practice.">
+    <PhaseShell title="Recall">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => (
           <div
@@ -96,7 +96,7 @@ export function ExamCheck({
   }
 
   return (
-    <PhaseShell title="Mark your results" subtitle="Tick every word you recalled. Be honest with yourself.">
+    <PhaseShell title="Mark your results">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => {
           const isChecked = checked.has(word.id)

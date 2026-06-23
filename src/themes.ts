@@ -35,6 +35,7 @@ export interface Theme {
   panelBg: string       // theme-flavour decorative panel background
   panelText: string     // theme-flavour decorative panel text
   panelMeta: string     // theme-flavour decorative panel metadata/label text
+  sessionName: string   // what a normal training session is called ("Practice" / "Lesson" / "Quest")
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
@@ -55,6 +56,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     toastBg: '#23232b', toastAction: '#a8a2ff',
     toastInk: '#ffffff', overlay: 'rgba(0,0,0,.45)', dangerInk: '#ffffff',
     panelBg: '#f8f8fb', panelText: '#15171c', panelMeta: '#565b64',
+    sessionName: 'Practice',
   },
   school: {
     id: 'school', label: 'School',
@@ -66,13 +68,14 @@ export const THEMES: Record<ThemeId, Theme> = {
     fontBody: "'Schibsted Grotesk', sans-serif",
     examLabel: 'Lesson Time',
     trainTitle: 'Homework',
-    trainLead: 'Clear these before the lesson bell rings.',
+    trainLead: 'Work through every word before the lesson starts.',
     startCta: 'Start homework',
     danger: '#b91c1c', dangerSoft: 'rgba(185,28,28,.12)',
     statusNew: '#a8a29e', statusWeak: '#d97706', statusMastered: '#16a34a',
     toastBg: '#292524', toastAction: '#c4b5fd',
     toastInk: '#ffffff', overlay: 'rgba(20,20,28,.45)', dangerInk: '#ffffff',
     panelBg: '#2b382f', panelText: '#f2ead6', panelMeta: '#cdbf9c',
+    sessionName: 'Lesson',
   },
   quest: {
     id: 'quest', label: 'Quest',
@@ -91,5 +94,6 @@ export const THEMES: Record<ThemeId, Theme> = {
     toastBg: '#1d2330', toastAction: '#818cf8',
     toastInk: '#eef1f7', overlay: 'rgba(0,0,0,.45)', dangerInk: '#ffffff',
     panelBg: '#161b24', panelText: '#eef1f7', panelMeta: '#99a3b4',
+    sessionName: 'Quest',
   },
 }
