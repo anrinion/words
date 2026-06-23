@@ -49,7 +49,7 @@ export default function Preview({
   const rowBg = (i: number) => i % 2 === 1 ? t.surface2 : 'transparent'
 
   return (
-    <PhaseShell title="Warm-up">
+    <PhaseShell title="First look">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {batch.map((word, i) => (
           <div key={word.id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${t.border}` }}>

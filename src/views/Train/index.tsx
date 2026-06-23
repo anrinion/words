@@ -224,15 +224,15 @@ export default function Train() {
     }
 
     const steps = [
-      { label: 'Warm-up', desc: 'read through' },
-      { label: 'Practice', desc: '2 rounds · self-check' },
-      { label: 'Recall', desc: 'from memory' },
+      { label: 'First look', desc: 'getting familiar' },
+      { label: 'Recall', desc: 'active learning' },
+      { label: 'Test', desc: 'checking the progress' },
     ]
 
     type TileConfig = { id: ModeTab; label: string; tagline: string; soon?: true; icon: JSX.Element }
     const tiles: TileConfig[] = [
       {
-        id: 'guided', label: 'Guided session', tagline: 'Read, practice, recall — the full loop.',
+        id: 'guided', label: 'Batch learning', tagline: 'Learn, recall, and test — the full loop.',
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 6h16M4 12h16M4 18h10" />
@@ -263,7 +263,7 @@ export default function Train() {
         <div style={{ display: 'flex', gap: 32, maxWidth: 940, width: '100%', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0, padding: '26px 0 60px' }}>
         <span style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.pop, display: 'block', marginBottom: 9 }}>
-          TRAIN
+          STUDY
         </span>
         <h2 style={{ fontFamily: t.fontHead, fontSize: 28, fontWeight: 700, color: t.ink, margin: '0 0 6px', letterSpacing: '-.01em' }}>
           {t.trainTitle}
@@ -367,7 +367,7 @@ export default function Train() {
                 opacity: settings ? 1 : 0.5, fontFamily: t.fontBody,
               }}
             >
-              Review weak words
+              Practice seen words
             </button>
           </>
         )}
@@ -429,8 +429,8 @@ export default function Train() {
   const { session } = state
   const { phase, batch, rounds, examOrder } = session
 
-  // 5-segment bar: Warm-up(0), Practice 1(1), Practice 2(2), Recall(3), Summary(4)
-  const segLabels = ['Warm-up', 'Practice 1', 'Practice 2', 'Recall', 'Summary']
+  // 5-segment bar: First look(0), Recall 1(1), Recall 2(2), Test(3), Summary(4)
+  const segLabels = ['First look', 'Recall 1', 'Recall 2', 'Test', 'Summary']
   let segIdx = 0
   if (phase === 'preview') {
     segIdx = 0

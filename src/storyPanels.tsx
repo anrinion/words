@@ -89,7 +89,7 @@ function getSchoolContent(stage: SidebarStage): { heading: string; quote: string
   }
   return {
     heading: 'Done',
-    quote: "Let's hope it was enough. She has your parents' number. She uses it.",
+    quote: "Let's hope it was enough.",
   }
 }
 
@@ -118,7 +118,7 @@ function getQuestContent(stage: SidebarStage, deckName: string): { heading: stri
     heading: stage.index === 0 ? 'After-action check' : 'Final assessment',
     body: stage.index === 0 ? "Mark your hits. Misses return to the queue." : "Last recon before the Boss Trial.",
   }
-  if (stage === 'exam' || stage === 'examRound' || stage === 'examCheck') return { heading: '⚔️ Boss Trial', body: "All skills summoned. Write from memory — no second chances." }
+  if (stage === 'exam' || stage === 'examRound' || stage === 'examCheck') return { heading: '⚔️ Boss Trial', body: "Final battle — have you leveled up enough, or are you heading for a respawn?" }
   return { heading: 'Run complete!', body: "XP earned and logged. Return to base." }
 }
 
@@ -131,12 +131,12 @@ function questXP(stage: SidebarStage): number {
 }
 
 function getNeutralContent(stage: SidebarStage): { heading: string; body: string } {
-  if (stage === 'idle') return { heading: 'Ready', body: "Choose a mode and begin your session." }
-  if (stage === 'preview') return { heading: 'Warm-up', body: "Look through the words before you start." }
-  if (typeof stage === 'object' && stage.type === 'round') return { heading: `Round ${stage.index + 1}`, body: "Work through each word at your pace." }
+  if (stage === 'idle') return { heading: 'Ready', body: "Choose a mode and start learning." }
+  if (stage === 'preview') return { heading: 'First look', body: "Read through the new words. Take your time." }
+  if (typeof stage === 'object' && stage.type === 'round') return { heading: `Round ${stage.index + 1}`, body: "Try to name each word from its translation before revealing." }
   if (typeof stage === 'object' && stage.type === 'selfCheck') return { heading: 'Self-check', body: "Rate your recall honestly." }
-  if (stage === 'exam' || stage === 'examRound' || stage === 'examCheck') return { heading: 'Recall', body: "Write from memory. No hints." }
-  return { heading: 'Session done', body: "Review your score below." }
+  if (stage === 'exam' || stage === 'examRound' || stage === 'examCheck') return { heading: 'Test', body: "Final check — how well do the words stick?" }
+  return { heading: 'Batch complete', body: "All words in this batch are done. Head back to start a new one." }
 }
 
 // ─── Sidebar card ─────────────────────────────────────────────────────────────
@@ -218,10 +218,6 @@ export function StorySidebar({ stage, deck, t }: { stage: SidebarStage; deck: De
 
   return (
     <div style={{ background: t.surface, border: cardBorder, borderRadius: 16, overflow: 'hidden' }}>
-      <div style={{ padding: '16px 16px 14px', borderBottom: divider }}>
-        <div style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint, marginBottom: 4 }}>Session</div>
-        <div style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 700, color: t.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{deck.name}</div>
-      </div>
       <div style={{ padding: '14px 16px' }}>
         <div style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink, marginBottom: 6 }}>{heading}</div>
         <div style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkSoft, lineHeight: 1.6 }}>{body}</div>

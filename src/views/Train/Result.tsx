@@ -74,11 +74,11 @@ export default function Result({
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 16 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusMastered, flexShrink: 0 }} />
-            {solidCount} feel solid
+            {solidCount} correct
           </div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, color: t.ink, fontFamily: t.fontBody }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusWeak, flexShrink: 0 }} />
-            {revisitCount} worth another look
+            {revisitCount} wrong
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default function Result({
         <div style={{ marginTop: 30 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusWeak, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em', color: t.ink, fontFamily: t.fontBody }}>WORTH ANOTHER LOOK</span>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em', color: t.ink, fontFamily: t.fontBody }}>WRONG</span>
           </div>
           <div style={{
             background: `${t.statusWeak}0d`, border: `1px solid ${t.statusWeak}2e`,
@@ -127,7 +127,7 @@ export default function Result({
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ width: 9, height: 9, borderRadius: '50%', background: t.statusMastered, flexShrink: 0 }} />
               <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.03em', color: t.ink, fontFamily: t.fontBody }}>
-                FEELS SOLID · {solidCount}
+                CORRECT · {solidCount}
               </span>
             </span>
             <span style={{ fontSize: 13, fontWeight: 600, color: t.pop, fontFamily: t.fontBody }}>

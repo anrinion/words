@@ -24,7 +24,7 @@ export default function Exam({
   }
 
   return (
-    <PhaseShell title="Recall">
+    <PhaseShell title="Test">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => (
           <div
@@ -57,9 +57,6 @@ export default function Exam({
         {submitted ? 'Submitting…' : 'See how I did →'}
       </TrainButton>
 
-      <p style={{ textAlign: 'center', fontSize: 13, color: t.inkFaint, margin: '12px 0 0', fontFamily: t.fontBody }}>
-        Blanks just mean we'll revisit those together — that's the point.
-      </p>
     </PhaseShell>
   )
 }

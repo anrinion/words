@@ -19,7 +19,7 @@ export default function RoundView({
   const [revealed, setRevealed] = useState(false)
   const isExam = !!label
 
-  const title = isExam ? label! : `Practice`
+  const title = isExam ? label! : `Recall`
   const roundLabel = !isExam && `round ${roundNumber} of 2`
 
   return (
