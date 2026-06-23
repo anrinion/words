@@ -2,22 +2,22 @@
 
 /* Theme CSS variables — defaults match the neutral theme */
 :root {
-  --app-bg: #ffffff;
-  --surface: #ffffff;
+  --app-bg: #fff;
+  --surface: #fff;
   --surface2: #f6f6f3;
   --ink: #15171c;
   --ink-soft: #565b64;
   --ink-faint: #9a9ea7;
   --border: #ecebe7;
   --pop: #2f63ff;
-  --pop-ink: #ffffff;
+  --pop-ink: #fff;
   --pop-soft: #edf2ff;
   --radius: 12px;
   --radius-sm: 9px;
   --font-head: 'Schibsted Grotesk', sans-serif;
   --font-body: 'Schibsted Grotesk', sans-serif;
   --danger: #dc5360;
-  --danger-soft: rgba(220,83,96,.12);
+  --danger-soft: rgb(220 83 96 / 12%);
   --status-new: #9aa0ac;
   --status-weak: #e0a23a;
   --status-mastered: #3fae86;
@@ -38,59 +38,103 @@ body {
   font-family: var(--font-body);
 }
 
-@keyframes dropIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: none; }
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes shimmer {
-  0%   { background-position: -450px 0; }
-  100% { background-position:  450px 0; }
+  0% {
+    background-position: -450px 0;
+  }
+
+  100% {
+    background-position: 450px 0;
+  }
 }
 
 @keyframes fadein {
-  from { opacity: 0; transform: translateY(3px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-@keyframes popUp {
-  from { opacity: 0; transform: translateY(6px) scale(.99); }
-  to   { opacity: 1; transform: none; }
+@keyframes pop-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @layer components {
   .input {
     @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
+
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--ink);
     font-family: var(--font-body);
   }
+
   .input:focus {
     border-color: var(--pop);
     box-shadow: 0 0 0 3px var(--pop-soft);
   }
+
   .btn-primary {
     @apply font-semibold py-2 px-4 transition-colors;
+
     background: var(--pop);
     color: var(--pop-ink);
     border-radius: var(--radius);
     font-family: var(--font-body);
   }
-  .btn-primary:hover { filter: brightness(1.08); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary:hover {
+    filter: brightness(1.08);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
   .btn-secondary {
     @apply font-semibold py-2 px-4 transition-colors;
+
     background: var(--surface2);
     color: var(--ink-soft);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     font-family: var(--font-body);
   }
-  .btn-secondary:hover { filter: brightness(0.97); }
+
+  .btn-secondary:hover {
+    filter: brightness(0.97);
+  }
+
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
+
   /* Themed card surface */
   .card {
     background: var(--surface);

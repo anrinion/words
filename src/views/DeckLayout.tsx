@@ -56,6 +56,7 @@ export default function DeckLayout() {
     return decks
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadDecks() }, [deckId])
 
   useEffect(() => {
@@ -173,7 +174,7 @@ export default function DeckLayout() {
                 position: 'absolute', top: 'calc(100% + 9px)', left: 0, width: 312,
                 background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radius,
                 boxShadow: '0 18px 44px -14px rgba(0,0,0,.4)',
-                padding: 7, zIndex: 40, animation: 'dropIn .16s ease',
+                padding: 7, zIndex: 40, animation: 'drop-in .16s ease',
               }}>
                 <div style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: t.inkFaint, padding: '8px 10px 6px' }}>
                   Your decks
@@ -389,7 +390,7 @@ function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
         <span style={{
           width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: t.pop, color: '#fff', fontFamily: t.fontBody, fontSize: 13, fontWeight: 700,
+          background: t.pop, color: t.popInk, fontFamily: t.fontBody, fontSize: 13, fontWeight: 700,
         }}>FR</span>
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
           <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: t.inkFaint }}>Next lesson</span>
@@ -419,7 +420,7 @@ function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
 function ModalShell({ title, children, onCancel }: { title: string; children: React.ReactNode; onCancel: () => void }) {
   const { theme: t } = useTheme()
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
+    <div style={{ position: 'fixed', inset: 0, background: t.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
       <div style={{ background: t.surface, borderRadius: t.radius, width: '100%', maxWidth: 400, padding: 20, boxShadow: '0 24px 60px -16px rgba(0,0,0,.5)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 600, color: t.ink }}>{title}</span>
@@ -481,7 +482,7 @@ function DeleteDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm:
       </p>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
-        <button onClick={onConfirm} style={{ flex: 1, padding: '8px 16px', background: '#ef4444', color: '#fff', borderRadius: t.radius, border: 'none', fontFamily: t.fontBody, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+        <button onClick={onConfirm} style={{ flex: 1, padding: '8px 16px', background: t.danger, color: t.dangerInk, borderRadius: t.radius, border: 'none', fontFamily: t.fontBody, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
       </div>
     </ModalShell>
   )

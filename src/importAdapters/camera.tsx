@@ -91,7 +91,7 @@ async function runOCR(
   })
 
   const rawText: string = result.data.text ?? ''
-  const tsv: string = (result.data as any).tsv ?? ''
+  const tsv: string = result.data.tsv ?? ''
 
   // Try TSV column detection first (works best for two-column tables)
   const pairs = extractPairsFromTsv(tsv)

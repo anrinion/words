@@ -76,6 +76,7 @@ export default function WordBank() {
         setLoading(false);
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { load(); }, [deck.id]);
 
     useEffect(() => {
@@ -153,7 +154,7 @@ export default function WordBank() {
     function toggleExpand(id: string) {
         setExpanded(prev => {
             const s = new Set(prev);
-            s.has(id) ? s.delete(id) : s.add(id);
+            if (s.has(id)) s.delete(id); else s.add(id);
             return s;
         });
     }
@@ -457,7 +458,7 @@ export default function WordBank() {
             {showImport && (
                 <div
                     onClick={() => setShowImport(false)}
-                    style={{ position: "fixed", inset: 0, background: "rgba(20,20,28,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
+                    style={{ position: "fixed", inset: 0, background: t.overlay, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
                 >
                     <div
                         onClick={e => e.stopPropagation()}
@@ -500,7 +501,7 @@ export default function WordBank() {
             {showDeleteDeck && (
                 <div
                     onClick={() => setShowDeleteDeck(false)}
-                    style={{ position: "fixed", inset: 0, background: "rgba(20,20,28,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
+                    style={{ position: "fixed", inset: 0, background: t.overlay, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
                 >
                     <div
                         onClick={e => e.stopPropagation()}
@@ -538,7 +539,7 @@ export default function WordBank() {
                 <div style={{
                     position: "fixed", left: "50%", bottom: 26, transform: "translateX(-50%)",
                     zIndex: 60, display: "flex", alignItems: "center", gap: 16,
-                    padding: "11px 14px 11px 18px", background: t.toastBg, color: "#fff",
+                    padding: "11px 14px 11px 18px", background: t.toastBg, color: t.toastInk,
                     borderRadius: 11, boxShadow: "0 12px 36px rgba(0,0,0,.3)",
                     fontSize: 13.5, fontFamily: t.fontBody, animation: "fadein .16s ease",
                     whiteSpace: "nowrap",
@@ -934,7 +935,7 @@ function ImportResultBanner({
                 {result.rejected.length > 0 && `, ${result.rejected.length} lines rejected`}
             </p>
             {showDuplicates && (
-                <div ref={listRef} style={{ marginTop: 8, maxHeight: 160, overflowY: "auto", background: "rgba(0,0,0,.04)", borderRadius: 6, padding: "8px 10px" }}>
+                <div ref={listRef} style={{ marginTop: 8, maxHeight: 160, overflowY: "auto", background: t.surface2, borderRadius: 6, padding: "8px 10px" }}>
                     {result.skippedDuplicates.map((term, i) => (
                         <p key={i} style={{ fontSize: 12, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>{term}</p>
                     ))}

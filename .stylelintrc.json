@@ -1,0 +1,9 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "color-no-invalid-hex": true,
+    "color-named": "never",
+    "declaration-property-value-no-unknown": null,
+    "import-notation": "string"
+  }
+}

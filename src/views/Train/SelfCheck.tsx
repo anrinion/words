@@ -18,6 +18,8 @@ export default function SelfCheck({
       done.current = true
       onDone()
     }
+    // onDone is captured on mount; this effect is intentionally run only once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return null
 }

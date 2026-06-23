@@ -67,11 +67,11 @@ export default function Train() {
 
   useEffect(() => {
     setInSession(state.status === 'running')
-  }, [state.status])
+  }, [state.status, setInSession])
 
   useEffect(() => {
     return () => setInSession(false)
-  }, [])
+  }, [setInSession])
 
   async function startSession(mode: 'normal' | 'review') {
     if (!settings) return
@@ -290,12 +290,12 @@ export default function Train() {
         )}
 
         {t.id === 'school' && (
-          <div style={{ display: 'flex', gap: 14, padding: '18px 20px', marginBottom: 20, background: '#2b382f', borderRadius: t.radius, color: '#eadfca' }}>
-            <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.pop, color: '#fff', fontFamily: t.fontBody, fontSize: 14, fontWeight: 700 }}>FR</span>
+          <div style={{ display: 'flex', gap: 14, padding: '18px 20px', marginBottom: 20, background: t.panelBg, borderRadius: t.radius, color: t.panelText }}>
+            <span style={{ width: 44, height: 44, flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.pop, color: t.popInk, fontFamily: t.fontBody, fontSize: 14, fontWeight: 700 }}>FR</span>
             <div style={{ flex: 1 }}>
-              <span style={{ fontFamily: t.fontHead, fontSize: 12.5, color: '#cdbf9c', letterSpacing: '.02em' }}>Frau Richter</span>
-              <p style={{ fontFamily: t.fontHead, fontSize: 14.5, fontStyle: 'italic', color: '#f2ead6', margin: '4px 0 0', lineHeight: 1.5 }}>
-                "We review the vocabulary today. I expect all words before the bell — no excuses, bitte."
+              <span style={{ fontFamily: t.fontHead, fontSize: 12.5, color: t.panelMeta, letterSpacing: '.02em' }}>Frau Richter</span>
+              <p style={{ fontFamily: t.fontHead, fontSize: 14.5, fontStyle: 'italic', color: t.panelText, margin: '4px 0 0', lineHeight: 1.5 }}>
+                &ldquo;We review the vocabulary today. I expect all words before the bell — no excuses, bitte.&rdquo;
               </p>
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function Train() {
                 : 'Pairs of words and translations appear on a timer — tap the matches as fast as you can.'}
             </p>
             <button disabled style={{ width: '100%', marginTop: 20, padding: 14, borderRadius: 13, border: 'none', background: t.surface2, color: t.inkSoft, fontSize: 14.5, fontWeight: 600, cursor: 'not-allowed', fontFamily: t.fontBody }}>
-              We're still building this mode
+              We&apos;re still building this mode
             </button>
           </div>
         )}

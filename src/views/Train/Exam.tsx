@@ -145,7 +145,7 @@ export function ExamCheck({
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: isChecked ? t.statusMastered : 'transparent',
                 border: `2px solid ${isChecked ? t.statusMastered : t.border}`,
-                color: '#fff', fontSize: 12, fontWeight: 700,
+                color: t.popInk, fontSize: 12, fontWeight: 700,
               }}>
                 {isChecked && '✓'}
               </span>
