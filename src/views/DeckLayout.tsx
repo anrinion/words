@@ -5,10 +5,8 @@ import { wordsApi } from '../api/words'
 import { settingsApi } from '../api/settings'
 import SessionContext from '../contexts/SessionContext'
 import { useTheme } from '../contexts/ThemeContext'
-import type { Theme } from '../themes'
 import type { Deck, Settings } from '@shared/types'
 import ModalShell from '../components/ModalShell'
-import { dateHash } from '../lib/dateHash'
 
 type DeckModal =
   | { type: 'create' }
@@ -268,25 +266,26 @@ export default function DeckLayout() {
             </nav>
           )}
 
-          {/* Header right: progress badge + theme switcher */}
+          {/* Header right: settings button */}
           <div style={{
             marginLeft: isDesktop ? 0 : 'auto',
             display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
             transition: 'opacity .2s',
             ...(inSession ? { opacity: 0.4 } : {}),
           }}>
-            {isDesktop && stats && stats.total > 0 && (
-              <ProgressBadge stats={stats} t={t} />
-            )}
             <button
               onClick={() => setShowSettings(true)}
-              style={{ ...tab(false), padding: '9px 12px' }}
-              title="Settings"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 11px', borderRadius: 6,
+                background: t.surface2, border: `1px solid ${t.border}`,
+                color: t.inkSoft, fontSize: 12.5, fontWeight: 500,
+                cursor: 'pointer', transition: 'all .15s ease',
+                fontFamily: t.fontBody,
+              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
-              </svg>
+              <GearIcon size={13} />
+              Settings
             </button>
           </div>
         </header>
@@ -341,71 +340,6 @@ export default function DeckLayout() {
         )}
       </div>
     </SessionContext.Provider>
-  )
-}
-
-// ── Progress badge (header top-right) ────────────────────────────────────────
-
-function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
-  const pct = Math.round((stats.mastered / Math.max(1, stats.total)) * 100)
-  const pillBase: CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 10,
-    borderRadius: 999, border: `1px solid ${t.border}`, background: t.surface2,
-  }
-
-  if (t.id === 'quest') {
-    const level = Math.max(1, Math.floor((stats.mastered / Math.max(1, stats.total)) * 10) + 1)
-    const xp = stats.mastered * 50
-    const xpNext = level * 300
-    const xpPct = Math.min(100, Math.round((xp % xpNext) / xpNext * 100))
-    return (
-      <div style={{ ...pillBase, padding: '7px 14px 7px 7px' }}>
-        <span style={{ padding: '5px 9px', borderRadius: 7, background: t.pop, color: t.popInk, fontFamily: t.fontHead, fontSize: 12, fontWeight: 700 }}>
-          Lv {level}
-        </span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 96 }}>
-          <div style={{ height: 5, borderRadius: 999, background: t.border, overflow: 'hidden' }}>
-            <div style={{ width: `${xpPct}%`, height: '100%', background: t.pop, borderRadius: 999 }} />
-          </div>
-          <span style={{ fontFamily: t.fontBody, fontSize: 10.5, fontWeight: 600, color: t.inkFaint, letterSpacing: '.02em' }}>
-            {xp.toLocaleString()} / {xpNext.toLocaleString()} XP
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  if (t.id === 'school') {
-    const h = (dateHash(3) % 2)
-    const m = (dateHash(4) % 59) + 1
-    const countdown = `${h > 0 ? h + ':' : ''}${String(m).padStart(2, '0')}:${String(dateHash(5) % 59).padStart(2, '0')}`
-    return (
-      <div style={{ ...pillBase, padding: '6px 14px 6px 6px' }}>
-        <span style={{
-          width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: t.pop, color: t.popInk, fontFamily: t.fontBody, fontSize: 13, fontWeight: 700,
-        }}>FR</span>
-        <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-          <span style={{ fontFamily: t.fontBody, fontSize: 10, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: t.inkFaint }}>Next lesson</span>
-          <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 600, color: t.pop }}>in {countdown}</span>
-        </span>
-      </div>
-    )
-  }
-
-  // neutral
-  return (
-    <div style={{ ...pillBase, padding: '8px 14px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: t.fontBody, fontSize: 12.5, fontWeight: 600, color: t.ink, whiteSpace: 'nowrap' }}>
-          {stats.mastered} / {stats.total}
-        </span>
-        <div style={{ width: 96, height: 5, borderRadius: 999, background: t.border, overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', background: t.pop, borderRadius: 999 }} />
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -465,6 +399,15 @@ function DeleteDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm:
   )
 }
 
+function GearIcon({ size = 15, stroke = 'currentColor' }: { size?: number; stroke?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  )
+}
+
 export function SettingsModal({ deckId, onClose }: { deckId: string; onClose: () => void }) {
   const { theme: t, setTheme } = useTheme()
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -493,79 +436,146 @@ export function SettingsModal({ deckId, onClose }: { deckId: string; onClose: ()
     onClose()
   }
 
-  const sectionLabel: CSSProperties = { fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: t.inkFaint, marginBottom: 8, display: 'block' }
+  const sectionLabel: CSSProperties = {
+    fontFamily: t.fontBody, fontSize: 11, fontWeight: 600,
+    letterSpacing: '.9px', textTransform: 'uppercase',
+    color: t.inkFaint, marginBottom: 9, display: 'block',
+  }
   const pill = (active: boolean): CSSProperties => ({
-    padding: '6px 14px', border: `1px solid ${active ? t.pop : t.border}`, borderRadius: t.radiusSm,
-    fontFamily: t.fontBody, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-    background: active ? t.popSoft : t.surface2, color: active ? t.pop : t.inkSoft,
-    transition: 'all .13s',
+    padding: '9px 8px', flex: 1, border: `1.5px solid ${active ? t.pop : t.border}`,
+    borderRadius: 8, fontFamily: t.fontBody, fontSize: 13, fontWeight: 500,
+    cursor: 'pointer', background: active ? t.pop : 'transparent',
+    color: active ? t.popInk : t.inkSoft, transition: 'all .13s',
   })
+  const divider: CSSProperties = { height: 1, background: t.border, margin: '0 0' }
 
   return (
-    <ModalShell title="Settings" onClose={onClose}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-        {/* Theme */}
-        <div>
-          <span style={sectionLabel}>Theme</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {(['neutral', 'school', 'quest'] as const).map((id) => (
-              <button key={id} onClick={() => setTheme(id)} style={pill(t.id === id)}>
-                {id === 'neutral' ? 'Neutral' : id === 'school' ? 'School' : 'Quest'}
-              </button>
-            ))}
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: t.overlay,
+        backdropFilter: 'blur(3px)', zIndex: 200,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        animation: 'backdrop-in .15s ease forwards',
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: t.surface, borderRadius: 14, width: 390,
+          maxWidth: 'calc(100vw - 32px)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.07)',
+          animation: 'modal-in .18s ease forwards', overflow: 'hidden',
+          fontFamily: t.fontBody,
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 22px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <div style={{ width: 30, height: 30, background: t.popSoft, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <GearIcon size={15} stroke={t.pop} />
+            </div>
+            <span style={{ fontSize: 16, fontWeight: 700, color: t.ink, letterSpacing: '-.3px' }}>Settings</span>
           </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', background: t.surface2, borderRadius: '50%',
+              cursor: 'pointer', color: t.inkFaint, transition: 'all .13s', flexShrink: 0,
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="1.5" y1="1.5" x2="9.5" y2="9.5"/><line x1="9.5" y1="1.5" x2="1.5" y2="9.5"/>
+            </svg>
+          </button>
         </div>
 
-        {settings ? (
-          <>
-            {/* Batch size */}
-            <div>
-              <span style={sectionLabel}>Batch size</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <input
-                  type="number"
-                  min={3}
-                  max={50}
-                  value={batchSizeStr}
-                  onChange={(e) => setBatchSizeStr(e.target.value)}
-                  onBlur={commitBatchSize}
-                  className="input"
-                  style={{ width: 80, textAlign: 'center' }}
-                />
-                <span style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkSoft }}>words per session</span>
-              </div>
-            </div>
+        <div style={divider} />
 
-            {/* Word order */}
-            <div>
-              <span style={sectionLabel}>Word order</span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['random', 'sequential'] as const).map((order) => (
-                  <button
-                    key={order}
-                    onClick={() => setSettings({ ...settings, batchOrder: order })}
-                    style={pill(settings.batchOrder === order)}
-                  >
-                    {order === 'random' ? 'Random' : 'Sequential'}
-                  </button>
-                ))}
-              </div>
-              <p style={{ fontFamily: t.fontBody, fontSize: 12, color: t.inkFaint, marginTop: 6 }}>
-                {settings.batchOrder === 'sequential'
-                  ? 'Words appear in import order (good for structured lists).'
-                  : 'Words are shuffled on every session start.'}
-              </p>
-            </div>
-          </>
-        ) : (
-          <p style={{ fontFamily: t.fontBody, fontSize: 13, color: t.inkFaint }}>Loading…</p>
-        )}
+        {/* Body */}
+        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 22 }}>
 
-        <button onClick={save} disabled={saving || !settings} className="btn-primary w-full">
-          {saving ? 'Saving…' : 'Save'}
-        </button>
+          {/* Theme */}
+          <div>
+            <span style={sectionLabel}>Theme</span>
+            <div style={{ display: 'flex', gap: 7 }}>
+              {(['neutral', 'school', 'quest'] as const).map((id) => (
+                <button key={id} onClick={() => setTheme(id)} style={pill(t.id === id)}>
+                  {id === 'neutral' ? 'Neutral' : id === 'school' ? 'School' : 'Quest'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {settings ? (
+            <>
+              {/* Batch size */}
+              <div>
+                <span style={sectionLabel}>Batch size</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    type="number"
+                    min={3}
+                    max={50}
+                    value={batchSizeStr}
+                    onChange={(e) => setBatchSizeStr(e.target.value)}
+                    onBlur={commitBatchSize}
+                    style={{
+                      width: 68, padding: '9px 10px', border: `1.5px solid ${t.border}`,
+                      borderRadius: 8, fontSize: 14, fontWeight: 600, textAlign: 'center',
+                      color: t.ink, background: t.surface2, fontFamily: t.fontBody,
+                      outline: 'none',
+                    }}
+                  />
+                  <span style={{ fontSize: 13, color: t.inkSoft }}>words per session</span>
+                </div>
+              </div>
+
+              {/* Word order */}
+              <div>
+                <span style={sectionLabel}>Word order</span>
+                <div style={{ display: 'flex', gap: 7, marginBottom: 9 }}>
+                  {(['random', 'sequential'] as const).map((order) => (
+                    <button
+                      key={order}
+                      onClick={() => setSettings({ ...settings, batchOrder: order })}
+                      style={{ ...pill(settings.batchOrder === order), flex: 'unset', padding: '9px 18px' }}
+                    >
+                      {order === 'random' ? 'Random' : 'Sequential'}
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: t.inkFaint, lineHeight: 1.5 }}>
+                  {settings.batchOrder === 'sequential'
+                    ? 'Words appear in import order (good for structured lists).'
+                    : 'Words are shuffled on every session start.'}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p style={{ fontSize: 13, color: t.inkFaint }}>Loading…</p>
+          )}
+        </div>
+
+        <div style={divider} />
+
+        {/* Footer */}
+        <div style={{ padding: '16px 22px' }}>
+          <button
+            onClick={save}
+            disabled={saving || !settings}
+            style={{
+              width: '100%', padding: 12, background: t.pop, color: t.popInk,
+              border: 'none', borderRadius: 9, fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', transition: 'background .15s', letterSpacing: '.1px',
+              fontFamily: t.fontBody, opacity: saving || !settings ? 0.6 : 1,
+            }}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
       </div>
-    </ModalShell>
+    </div>
   )
 }

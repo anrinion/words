@@ -27,6 +27,15 @@ const noHardcodedColors = {
     },
   },
   create(context) {
+    function checkColorNode(node) {
+      if (node.type === 'Literal' && typeof node.value === 'string' && COLOR_PATTERN.test(node.value)) {
+        context.report({ node, messageId: 'hardcodedColor', data: { value: node.value } })
+      } else if (node.type === 'ConditionalExpression') {
+        checkColorNode(node.consequent)
+        checkColorNode(node.alternate)
+      }
+    }
+
     return {
       Property(node) {
         const keyName =
@@ -34,11 +43,7 @@ const noHardcodedColors = {
           : node.key.type === 'Literal' ? String(node.key.value)
           : null
         if (!keyName || !COLOR_PROPERTIES.has(keyName)) return
-
-        const val = node.value
-        if (val.type === 'Literal' && typeof val.value === 'string' && COLOR_PATTERN.test(val.value)) {
-          context.report({ node: val, messageId: 'hardcodedColor', data: { value: val.value } })
-        }
+        checkColorNode(node.value)
       },
     }
   },
