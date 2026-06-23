@@ -326,9 +326,8 @@ export default function Train() {
           <>
             <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${t.border}` }}>
-                <div>
-                  <div style={{ fontFamily: t.fontBody, fontSize: 11, fontWeight: 700, letterSpacing: '.06em', color: t.inkSoft }}>READY WHEN YOU ARE</div>
-                  <div style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink, marginTop: 3 }}>{deck.name}</div>
+                <div style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 700, color: t.ink }}>
+                  {tiles.find(tile => tile.id === modeTab)!.label}
                 </div>
               </div>
               <div style={{ padding: '6px 8px' }}>
@@ -357,18 +356,6 @@ export default function Train() {
             >
               {t.startCta} →
             </TrainButton>
-            <button
-              onClick={() => startSession('review')}
-              style={{
-                width: '100%', padding: '11px 14px', marginTop: 10, borderRadius: 12,
-                border: `1px solid ${t.border}`, background: 'transparent',
-                color: t.inkSoft, fontSize: 13.5, fontWeight: 500,
-                cursor: settings ? 'pointer' : 'not-allowed',
-                opacity: settings ? 1 : 0.5, fontFamily: t.fontBody,
-              }}
-            >
-              Practice seen words
-            </button>
           </>
         )}
 

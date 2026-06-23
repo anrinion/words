@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { selectBatch, isMastered, shuffleDifferentFrom } from './batch'
+import { selectBatch, isLearned, shuffleDifferentFrom } from './batch'
 import type { Word, Settings } from './types'
 import { DEFAULT_SETTINGS } from './types'
 
@@ -27,13 +27,15 @@ function makeWord(overrides: Partial<Word> = {}): Word {
 
 const settings: Settings = { ...DEFAULT_SETTINGS, batchSize: 5 }
 
-describe('isMastered', () => {
-  it('true when streak >= threshold', () => {
-    expect(isMastered(makeWord({ streak: 2 }), 2)).toBe(true)
-    expect(isMastered(makeWord({ streak: 3 }), 2)).toBe(true)
+describe('isLearned', () => {
+  it('true when seen and not problematic', () => {
+    expect(isLearned(makeWord({ lastSeenAt: 1000, weak: 0 }))).toBe(true)
   })
-  it('false when streak < threshold', () => {
-    expect(isMastered(makeWord({ streak: 1 }), 2)).toBe(false)
+  it('false when never seen', () => {
+    expect(isLearned(makeWord({ lastSeenAt: null, weak: 0 }))).toBe(false)
+  })
+  it('false when problematic', () => {
+    expect(isLearned(makeWord({ lastSeenAt: 1000, weak: 1 }))).toBe(false)
   })
 })
 
@@ -45,18 +47,19 @@ describe('selectBatch — normal mode', () => {
     expect(words[0].id).toBe(unseen.id)
   })
 
-  it('fills with weak words when never-seen runs out', () => {
-    const weak = makeWord({ lastSeenAt: 1000, weak: 1, streak: 0 })
-    const nonMastered = makeWord({ lastSeenAt: 1000, weak: 0, streak: 1 })
-    const { words } = selectBatch([nonMastered, weak], 'normal', settings)
-    expect(words[0].id).toBe(weak.id)
+  it('includes problematic words, excludes learned', () => {
+    const problematic = makeWord({ lastSeenAt: 1000, weak: 1, streak: 0 })
+    const learned = makeWord({ lastSeenAt: 1000, weak: 0, streak: 1 })
+    const { words } = selectBatch([learned, problematic], 'normal', settings)
+    expect(words).toHaveLength(1)
+    expect(words[0].id).toBe(problematic.id)
   })
 
-  it('never includes mastered words if avoidable', () => {
-    const mastered = makeWord({ streak: 2, lastSeenAt: 1000 })
+  it('never includes learned words if avoidable', () => {
+    const learned = makeWord({ lastSeenAt: 1000, weak: 0 })
     const fresh = makeWord({ lastSeenAt: null })
-    const { words } = selectBatch([mastered, fresh], 'normal', settings)
-    expect(words.find((w) => w.id === mastered.id)).toBeUndefined()
+    const { words } = selectBatch([learned, fresh], 'normal', settings)
+    expect(words.find((w) => w.id === learned.id)).toBeUndefined()
   })
 
   it('respects batchSize', () => {
@@ -67,7 +70,7 @@ describe('selectBatch — normal mode', () => {
 })
 
 describe('selectBatch — review mode', () => {
-  it('returns only weak words, worst-first', () => {
+  it('returns only problematic words, worst-first', () => {
     const a = makeWord({ weak: 1, timesWrongInExam: 3, lastSeenAt: 100 })
     const b = makeWord({ weak: 1, timesWrongInExam: 5, lastSeenAt: 200 })
     const c = makeWord({ weak: 0, timesWrongInExam: 10, lastSeenAt: 50 })
@@ -76,7 +79,7 @@ describe('selectBatch — review mode', () => {
     expect(words.find((w) => w.id === c.id)).toBeUndefined()
   })
 
-  it('returns empty with reason when no weak words', () => {
+  it('returns empty with reason when no problematic words', () => {
     const { words, emptyReason } = selectBatch([makeWord()], 'review', settings)
     expect(words).toHaveLength(0)
     expect(emptyReason).toBeTruthy()

@@ -4,8 +4,7 @@ import type { Deck, Word } from '@shared/types'
 import { wordsApi } from '../api/words'
 import { sessionsApi } from '../api/sessions'
 import type { SessionSummary } from '../api/sessions'
-import { settingsApi } from '../api/settings'
-import { isMastered } from '@shared/batch'
+import { isLearned } from '@shared/batch'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Theme } from '../themes'
 
@@ -14,25 +13,20 @@ export default function Progress() {
   const { theme: t } = useTheme()
   const [words, setWords] = useState<Word[]>([])
   const [sessions, setSessions] = useState<SessionSummary[]>([])
-  const [masteryThreshold, setMasteryThreshold] = useState(2)
 
   useEffect(() => {
     Promise.all([
       wordsApi.list(deck.id),
       sessionsApi.list(deck.id),
-      settingsApi.getDeck(deck.id),
-    ]).then(([w, s, settings]) => {
+    ]).then(([w, s]) => {
       setWords(w)
       setSessions(s)
-      setMasteryThreshold(settings.masteryStreakThreshold)
     })
   }, [deck.id])
 
-  const total = words.length
-  const mastered = words.filter((w) => isMastered(w, masteryThreshold)).length
-  const weak = words.filter((w) => w.weak === 1).length
+  const learned = words.filter((w) => isLearned(w)).length
+  const problematic = words.filter((w) => w.weak === 1).length
   const neverSeen = words.filter((w) => w.lastSeenAt === null).length
-  const learning = total - mastered - weak - neverSeen
 
   const pad: CSSProperties = { padding: '26px 20px 40px', maxWidth: 880, margin: '0 auto' }
 
@@ -44,8 +38,8 @@ export default function Progress() {
 
       {/* 3-tile grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, margin: '18px 0 28px' }}>
-        <Tile label="Known" value={mastered} color={t.pop} t={t} />
-        <Tile label="Learning" value={learning + weak} color={t.ink} t={t} />
+        <Tile label="Learned" value={learned} color={t.pop} t={t} />
+        <Tile label="Problematic" value={problematic} color={t.ink} t={t} />
         <Tile label="New" value={neverSeen} color={t.inkFaint} t={t} />
       </div>
 

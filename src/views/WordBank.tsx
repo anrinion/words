@@ -33,15 +33,15 @@ function statusMeta(t: Theme): Record<WordStatus, { color: string; label: string
 }
 
 function getStatus(word: Word): WordStatus {
-    if (word.streak >= 2) return "learned";
+    if (word.lastSeenAt !== null && word.weak === 0) return "learned";
     if (word.weak === 1) return "problematic";
     return "new";
 }
 
-function statusToFields(status: WordStatus): { streak: number; weak: number } {
-    if (status === "learned") return { streak: 2, weak: 0 };
+function statusToFields(status: WordStatus): { streak: number; weak: number; lastSeenAt?: number | null } {
+    if (status === "learned") return { streak: 1, weak: 0, lastSeenAt: Date.now() };
     if (status === "problematic") return { streak: 0, weak: 1 };
-    return { streak: 0, weak: 0 };
+    return { streak: 0, weak: 0, lastSeenAt: null };
 }
 
 type SortKey = "az" | "status" | "recent";

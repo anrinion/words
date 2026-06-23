@@ -70,7 +70,6 @@ export interface GradeBand {
 export interface Settings {
   batchSize: number
   numRounds: number
-  masteryStreakThreshold: number
   batchOrder: 'random' | 'sequential'
   fuzzyToleranceBands: ToleranceBand[]
   gradeBands: GradeBand[]
@@ -80,7 +79,6 @@ export const DEFAULT_SETTINGS: Settings = {
   batchSize: 15,
   numRounds: 2,
   batchOrder: 'random',
-  masteryStreakThreshold: 2,
   fuzzyToleranceBands: [
     { maxLen: 4, tolerance: 0 },
     { maxLen: 7, tolerance: 1 },
@@ -96,8 +94,8 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export interface DeckStats {
   total: number
-  mastered: number
-  weak: number
+  learned: number
+  problematic: number
   neverSeen: number
 }
 

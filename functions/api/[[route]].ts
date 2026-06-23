@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { eq, and, isNull } from 'drizzle-orm'
 import * as schema from '../../db/schema'
 import { matchesAnyToken, gradeLabel } from '../../shared/fuzzy'
-import { selectBatch, isMastered, shuffle } from '../../shared/batch'
+import { selectBatch, isLearned, shuffle } from '../../shared/batch'
 import type { Settings, SessionData, ParsedWord } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/types'
 
@@ -258,12 +258,10 @@ app.delete('/api/decks/:id', async (c) => {
 app.get('/api/decks/:deckId/words', async (c) => {
   const userId = c.get('userId')
   const { deckId } = c.req.param()
-  const { search, levelTag, categoryTag, weak, mastered } = c.req.query()
+  const { search, levelTag, categoryTag, problematic, learned } = c.req.query()
 
   const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
   if (!deck) return c.json({ error: 'Not found' }, 404)
-
-  const settings = await getSettings(db(c.env), userId, deckId)
 
   let rows = await db(c.env).select().from(schema.words).where(eq(schema.words.deckId, deckId)).all()
 
@@ -273,8 +271,8 @@ app.get('/api/decks/:deckId/words', async (c) => {
   }
   if (levelTag) rows = rows.filter((w) => w.levelTag === levelTag)
   if (categoryTag) rows = rows.filter((w) => w.categoryTag === categoryTag)
-  if (weak === '1') rows = rows.filter((w) => w.weak === 1)
-  if (mastered === '1') rows = rows.filter((w) => isMastered(w, settings.masteryStreakThreshold))
+  if (problematic === '1') rows = rows.filter((w) => w.weak === 1)
+  if (learned === '1') rows = rows.filter((w) => isLearned(w))
 
   return c.json(rows)
 })
@@ -314,7 +312,7 @@ app.patch('/api/decks/:deckId/words/:id', async (c) => {
   const deck = await db(c.env).select().from(schema.decks).where(and(eq(schema.decks.id, deckId), eq(schema.decks.userId, userId))).get()
   if (!deck) return c.json({ error: 'Not found' }, 404)
 
-  const body = await c.req.json<Partial<ParsedWord> & { weak?: number; streak?: number }>()
+  const body = await c.req.json<Partial<ParsedWord> & { weak?: number; streak?: number; lastSeenAt?: number | null }>()
   const updates: Record<string, string | number | null> = {}
   if (body.term !== undefined) updates.term = body.term.trim()
   if (body.translation !== undefined) updates.translation = body.translation.trim()
@@ -325,6 +323,7 @@ app.patch('/api/decks/:deckId/words/:id', async (c) => {
   if (body.exampleTranslation !== undefined) updates.exampleTranslation = body.exampleTranslation?.trim() ?? null
   if (body.weak !== undefined) updates.weak = body.weak
   if (body.streak !== undefined) updates.streak = body.streak
+  if (body.lastSeenAt !== undefined) updates.lastSeenAt = body.lastSeenAt
   await db(c.env).update(schema.words).set(updates).where(eq(schema.words.id, id))
   return c.json({ ok: true })
 })

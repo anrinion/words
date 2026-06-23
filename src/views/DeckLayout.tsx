@@ -7,6 +7,7 @@ import SessionContext from '../contexts/SessionContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
 import type { Deck, Settings } from '@shared/types'
+import { isLearned } from '@shared/batch'
 import ModalShell from '../components/ModalShell'
 
 type DeckModal =
@@ -15,7 +16,7 @@ type DeckModal =
   | { type: 'delete'; deck: Deck }
   | null
 
-type DeckStats = { total: number; mastered: number }
+type DeckStats = { total: number; learned: number }
 
 function useIsDesktop() {
   const [v, setV] = useState(() => window.innerWidth >= 768)
@@ -63,7 +64,7 @@ export default function DeckLayout() {
   useEffect(() => {
     if (!deckId) return
     wordsApi.list(deckId).then((words) => {
-      setStats({ total: words.length, mastered: words.filter((w) => w.streak >= 2).length })
+      setStats({ total: words.length, learned: words.filter((w) => isLearned(w)).length })
     })
   }, [deckId])
 
@@ -73,7 +74,7 @@ export default function DeckLayout() {
       allDecks.map((d) =>
         wordsApi.list(d.id).then((words) => [
           d.id,
-          { total: words.length, mastered: words.filter((w) => w.streak >= 2).length },
+          { total: words.length, learned: words.filter((w) => isLearned(w)).length },
         ] as [string, DeckStats])
       )
     ).then((results) => setAllDeckStats(Object.fromEntries(results)))
@@ -162,7 +163,7 @@ export default function DeckLayout() {
                   {deck.name}
                 </span>
                 <span style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 500, color: t.inkFaint, whiteSpace: 'nowrap' }}>
-                  {stats && stats.total > 0 ? `${stats.mastered} of ${stats.total} learned` : `${deck.targetLanguage} · ${deck.nativeLanguage}`}
+                  {stats && stats.total > 0 ? `${stats.learned} of ${stats.total} learned` : `${deck.targetLanguage} · ${deck.nativeLanguage}`}
                 </span>
               </span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" style={{ color: t.inkFaint, marginLeft: 3, flexShrink: 0 }}>
@@ -207,7 +208,7 @@ export default function DeckLayout() {
                         <span style={{ fontFamily: t.fontHead, fontSize: 14, fontWeight: 600, color: t.ink, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</span>
                         <span style={{ fontFamily: t.fontBody, fontSize: 11.5, fontWeight: 500, color: t.inkFaint }}>
                           {allDeckStats[d.id]
-                            ? `${allDeckStats[d.id].mastered} of ${allDeckStats[d.id].total} learned`
+                            ? `${allDeckStats[d.id].learned} of ${allDeckStats[d.id].total} learned`
                             : `${d.targetLanguage} · ${d.nativeLanguage}`}
                         </span>
                       </span>

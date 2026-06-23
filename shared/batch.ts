@@ -1,7 +1,8 @@
 import type { Word, Settings } from './types'
 
-export function isMastered(word: Word, threshold: number): boolean {
-  return word.streak >= threshold
+// A word is learned as soon as it's recalled correctly in a test (weak=0, lastSeenAt set).
+export function isLearned(word: Word): boolean {
+  return word.weak === 0 && word.lastSeenAt !== null
 }
 
 export interface BatchResult {
@@ -14,18 +15,18 @@ export function selectBatch(
   mode: 'normal' | 'review',
   settings: Settings,
 ): BatchResult {
-  const { batchSize, masteryStreakThreshold } = settings
+  const { batchSize } = settings
 
   if (mode === 'review') {
-    const weak = words.filter((w) => w.weak === 1)
-    if (weak.length === 0) {
+    const problematic = words.filter((w) => w.weak === 1)
+    if (problematic.length === 0) {
       return {
         words: [],
         emptyReason:
-          'No weak words in this deck yet. Run some normal sessions first, then words you get wrong will appear here.',
+          'No problematic words in this deck yet. Run some normal sessions first, then words you get wrong will appear here.',
       }
     }
-    const sorted = [...weak].sort((a, b) => {
+    const sorted = [...problematic].sort((a, b) => {
       if (b.timesWrongInExam !== a.timesWrongInExam) {
         return b.timesWrongInExam - a.timesWrongInExam
       }
@@ -36,15 +37,11 @@ export function selectBatch(
     return { words: sorted.slice(0, batchSize) }
   }
 
-  // Normal mode: never-seen → weak → lowest-streak non-mastered
+  // Normal mode: new words first, then problematic — learned words are never re-shown
   const neverSeen = words.filter((w) => w.lastSeenAt === null)
-  const weak = words.filter((w) => w.lastSeenAt !== null && w.weak === 1)
-  const nonMastered = words.filter(
-    (w) => w.lastSeenAt !== null && w.weak === 0 && !isMastered(w, masteryStreakThreshold),
-  )
-  nonMastered.sort((a, b) => a.streak - b.streak)
+  const problematic = words.filter((w) => w.lastSeenAt !== null && w.weak === 1)
 
-  const pool = [...neverSeen, ...weak, ...nonMastered]
+  const pool = [...neverSeen, ...problematic]
   return { words: pool.slice(0, batchSize) }
 }
 
