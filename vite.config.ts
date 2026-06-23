@@ -27,4 +27,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  test: {
+    setupFiles: ['./src/test-setup.ts'],
+  },
 })

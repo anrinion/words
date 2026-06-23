@@ -465,12 +465,25 @@ function DeleteDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm:
   )
 }
 
-function SettingsModal({ deckId, onClose }: { deckId: string; onClose: () => void }) {
+export function SettingsModal({ deckId, onClose }: { deckId: string; onClose: () => void }) {
   const { theme: t, setTheme } = useTheme()
   const [settings, setSettings] = useState<Settings | null>(null)
   const [saving, setSaving] = useState(false)
+  const [batchSizeStr, setBatchSizeStr] = useState('')
 
-  useEffect(() => { settingsApi.getDeck(deckId).then(setSettings) }, [deckId])
+  useEffect(() => {
+    settingsApi.getDeck(deckId).then((s) => {
+      setSettings(s)
+      setBatchSizeStr(String(s.batchSize))
+    })
+  }, [deckId])
+
+  function commitBatchSize() {
+    if (!settings) return
+    const clamped = Math.max(3, Math.min(50, Number(batchSizeStr) || settings.batchSize))
+    setSettings({ ...settings, batchSize: clamped })
+    setBatchSizeStr(String(clamped))
+  }
 
   async function save() {
     if (!settings) return
@@ -514,8 +527,9 @@ function SettingsModal({ deckId, onClose }: { deckId: string; onClose: () => voi
                   type="number"
                   min={3}
                   max={50}
-                  value={settings.batchSize}
-                  onChange={(e) => setSettings({ ...settings, batchSize: Math.max(3, Math.min(50, Number(e.target.value))) })}
+                  value={batchSizeStr}
+                  onChange={(e) => setBatchSizeStr(e.target.value)}
+                  onBlur={commitBatchSize}
                   className="input"
                   style={{ width: 80, textAlign: 'center' }}
                 />
