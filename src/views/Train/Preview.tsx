@@ -2,6 +2,8 @@ import { useState, CSSProperties } from 'react'
 import type { Word } from '@shared/types'
 import { useTheme } from '../../contexts/ThemeContext'
 import AudioButton from '../../components/AudioButton'
+import PhaseShell from '../../components/PhaseShell'
+import { TrainButton } from '../../components/TrainButton'
 
 export default function Preview({
   batch,
@@ -44,20 +46,10 @@ export default function Preview({
     background: 'transparent', color: t.inkSoft, cursor: 'pointer',
     opacity: 0.35, flexShrink: 0,
   }
-  const inputStyle: CSSProperties = {
-    width: '100%', padding: '8px 10px', border: `1px solid ${t.border}`,
-    borderRadius: 8, fontSize: 14, background: t.surface, color: t.ink,
-    outline: 'none', fontFamily: t.fontBody,
-  }
   const rowBg = (i: number) => i % 2 === 1 ? t.surface2 : 'transparent'
 
   return (
-    <div style={{ padding: '18px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
-      <h2 style={{ fontSize: 23, fontWeight: 700, color: t.ink, margin: 0, fontFamily: t.fontHead }}>Warm-up</h2>
-      <p style={{ fontSize: 14.5, color: t.inkSoft, margin: '6px 0 20px', fontFamily: t.fontBody }}>
-        Just read through. Nothing to answer — let them settle in.
-      </p>
-
+    <PhaseShell title="Warm-up" subtitle="Just read through. Nothing to answer — let them settle in.">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {batch.map((word, i) => (
           <div key={word.id} style={{ borderTop: i === 0 ? 'none' : `1px solid ${t.border}` }}>
@@ -67,13 +59,13 @@ export default function Preview({
                   <input
                     autoFocus value={editTerm}
                     onChange={e => setEditTerm(e.target.value)} onKeyDown={onKeyDown}
-                    placeholder="Term" style={{ ...inputStyle, fontWeight: 600 }}
+                    placeholder="Term" className="input" style={{ fontWeight: 600 }}
                     autoCapitalize="none" autoCorrect="off"
                   />
                   <input
                     value={editTranslation}
                     onChange={e => setEditTranslation(e.target.value)} onKeyDown={onKeyDown}
-                    placeholder="Translation" style={inputStyle}
+                    placeholder="Translation" className="input"
                     autoCapitalize="none" autoCorrect="off"
                   />
                 </div>
@@ -142,17 +134,9 @@ export default function Preview({
         ))}
       </div>
 
-      <button
-        onClick={onContinue}
-        style={{
-          width: '100%', padding: 15, borderRadius: 14, border: 'none',
-          background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
-          cursor: 'pointer', fontFamily: t.fontBody, marginTop: 18,
-          boxShadow: `0 2px 8px ${t.pop}46`,
-        }}
-      >
+      <TrainButton onClick={onContinue} style={{ marginTop: 18 }}>
         I've read these →
-      </button>
-    </div>
+      </TrainButton>
+    </PhaseShell>
   )
 }

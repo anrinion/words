@@ -7,6 +7,8 @@ import SessionContext from '../contexts/SessionContext'
 import { useTheme } from '../contexts/ThemeContext'
 import type { Theme } from '../themes'
 import type { Deck, Settings } from '@shared/types'
+import ModalShell from '../components/ModalShell'
+import { dateHash } from '../lib/dateHash'
 
 type DeckModal =
   | { type: 'create' }
@@ -344,14 +346,6 @@ export default function DeckLayout() {
 
 // ── Progress badge (header top-right) ────────────────────────────────────────
 
-function dateHash(seed: number): number {
-  const d = new Date()
-  const str = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${seed}`
-  let h = 0
-  for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0
-  return Math.abs(h)
-}
-
 function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
   const pct = Math.round((stats.mastered / Math.max(1, stats.total)) * 100)
   const pillBase: CSSProperties = {
@@ -415,23 +409,6 @@ function ProgressBadge({ stats, t }: { stats: DeckStats; t: Theme }) {
   )
 }
 
-// ── Modal shell ───────────────────────────────────────────────────────────────
-
-function ModalShell({ title, children, onCancel }: { title: string; children: React.ReactNode; onCancel: () => void }) {
-  const { theme: t } = useTheme()
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: t.overlay, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 16 }}>
-      <div style={{ background: t.surface, borderRadius: t.radius, width: '100%', maxWidth: 400, padding: 20, boxShadow: '0 24px 60px -16px rgba(0,0,0,.5)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontFamily: t.fontHead, fontSize: 16, fontWeight: 600, color: t.ink }}>{title}</span>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: t.inkFaint, cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>×</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
 function CreateDeckModal({ onConfirm, onCancel }: { onConfirm: (n: string, t: string, l: string) => void; onCancel: () => void }) {
   const { theme: t } = useTheme()
   const [name, setName] = useState('')
@@ -447,7 +424,7 @@ function CreateDeckModal({ onConfirm, onCancel }: { onConfirm: (n: string, t: st
   const valid = name.trim() && target.trim() && native.trim()
 
   return (
-    <ModalShell title="New deck" onCancel={onCancel}>
+    <ModalShell title="New deck" onClose={onCancel}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div><label style={labelStyle}>Deck name</label><input ref={ref} value={name} onChange={(e) => setName(e.target.value)} onKeyDown={onEnter} placeholder="e.g. German B1 exam" className="input" /></div>
         <div><label style={labelStyle}>Language you're learning</label><input value={target} onChange={(e) => setTarget(e.target.value)} onKeyDown={onEnter} placeholder="e.g. de or German" className="input" /></div>
@@ -464,7 +441,7 @@ function RenameDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm:
   useEffect(() => { ref.current?.focus(); ref.current?.select() }, [])
   function submit() { if (name.trim()) onConfirm(name.trim()) }
   return (
-    <ModalShell title="Rename deck" onCancel={onCancel}>
+    <ModalShell title="Rename deck" onClose={onCancel}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <input ref={ref} value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit() } }} className="input" />
         <button onClick={submit} className="btn-primary w-full" style={{ opacity: name.trim() ? 1 : 0.4, pointerEvents: name.trim() ? 'auto' : 'none' }}>Save</button>
@@ -476,7 +453,7 @@ function RenameDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm:
 function DeleteDeckModal({ deck, onConfirm, onCancel }: { deck: Deck; onConfirm: () => void; onCancel: () => void }) {
   const { theme: t } = useTheme()
   return (
-    <ModalShell title="Delete deck?" onCancel={onCancel}>
+    <ModalShell title="Delete deck?" onClose={onCancel}>
       <p style={{ fontFamily: t.fontBody, fontSize: 14, color: t.inkSoft, marginBottom: 16, lineHeight: 1.5 }}>
         This will permanently delete <strong style={{ color: t.ink }}>{deck.name}</strong> and all its words and session history.
       </p>
@@ -512,7 +489,7 @@ function SettingsModal({ deckId, onClose }: { deckId: string; onClose: () => voi
   })
 
   return (
-    <ModalShell title="Settings" onCancel={onClose}>
+    <ModalShell title="Settings" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Theme */}

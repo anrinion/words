@@ -11,6 +11,7 @@ import type { ImportAdapter } from "../importAdapters/types";
 import AudioButton from "../components/AudioButton";
 import { useTheme } from "../contexts/ThemeContext";
 import type { Theme } from "../themes";
+import ModalShell from "../components/ModalShell";
 
 const ADAPTERS: ImportAdapter[] = [
     textPasteAdapter,
@@ -456,82 +457,66 @@ export default function WordBank() {
 
             {/* Import modal */}
             {showImport && (
-                <div
-                    onClick={() => setShowImport(false)}
-                    style={{ position: "fixed", inset: 0, background: t.overlay, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
-                >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        style={{ width: 480, maxWidth: "100%", background: t.surface, borderRadius: t.radius, boxShadow: "0 24px 70px rgba(0,0,0,.32)", padding: 24 }}
-                    >
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-                            <div>
-                                <div style={{ fontSize: 17, fontWeight: 700, color: t.ink, fontFamily: t.fontHead }}>Import words</div>
-                                <div style={{ fontSize: 13, color: t.inkSoft, marginTop: 4, fontFamily: t.fontBody }}>Choose an import method</div>
-                            </div>
-                            <button
-                                onClick={() => setShowImport(false)}
-                                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: t.radiusSm, border: "none", background: t.surface2, color: t.inkSoft, cursor: "pointer", flexShrink: 0 }}
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                            </button>
+                <ModalShell onClose={() => setShowImport(false)} maxWidth={480}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+                        <div>
+                            <div style={{ fontSize: 17, fontWeight: 700, color: t.ink, fontFamily: t.fontHead }}>Import words</div>
+                            <div style={{ fontSize: 13, color: t.inkSoft, marginTop: 4, fontFamily: t.fontBody }}>Choose an import method</div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            {ADAPTERS.map(adapter => (
-                                <button
-                                    key={adapter.id}
-                                    onClick={() => runAdapter(adapter)}
-                                    style={{
-                                        textAlign: "left", padding: "12px 16px",
-                                        borderRadius: t.radiusSm, border: `1px solid ${t.border}`,
-                                        background: t.surface2, cursor: "pointer",
-                                        fontFamily: t.fontBody,
-                                    }}
-                                >
-                                    <div style={{ fontSize: 14, fontWeight: 600, color: t.ink }}>{adapter.name}</div>
-                                    <div style={{ fontSize: 12, color: t.inkSoft, marginTop: 2 }}>{adapter.description}</div>
-                                </button>
-                            ))}
-                        </div>
+                        <button
+                            onClick={() => setShowImport(false)}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: t.radiusSm, border: "none", background: t.surface2, color: t.inkSoft, cursor: "pointer", flexShrink: 0 }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                        </button>
                     </div>
-                </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {ADAPTERS.map(adapter => (
+                            <button
+                                key={adapter.id}
+                                onClick={() => runAdapter(adapter)}
+                                style={{
+                                    textAlign: "left", padding: "12px 16px",
+                                    borderRadius: t.radiusSm, border: `1px solid ${t.border}`,
+                                    background: t.surface2, cursor: "pointer",
+                                    fontFamily: t.fontBody,
+                                }}
+                            >
+                                <div style={{ fontSize: 14, fontWeight: 600, color: t.ink }}>{adapter.name}</div>
+                                <div style={{ fontSize: 12, color: t.inkSoft, marginTop: 2 }}>{adapter.description}</div>
+                            </button>
+                        ))}
+                    </div>
+                </ModalShell>
             )}
 
             {/* Delete deck modal */}
             {showDeleteDeck && (
-                <div
-                    onClick={() => setShowDeleteDeck(false)}
-                    style={{ position: "fixed", inset: 0, background: t.overlay, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, zIndex: 50, animation: "fadein .14s ease" }}
-                >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        style={{ width: 420, maxWidth: "100%", background: t.surface, borderRadius: t.radius, boxShadow: "0 24px 70px rgba(0,0,0,.32)", padding: 24 }}
-                    >
-                        <div style={{ width: 44, height: 44, borderRadius: 12, background: t.dangerSoft, display: "flex", alignItems: "center", justifyContent: "center", color: t.danger, marginBottom: 14 }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            </svg>
-                        </div>
-                        <div style={{ fontSize: 17, fontWeight: 700, color: t.ink, fontFamily: t.fontHead }}>Delete this deck?</div>
-                        <div style={{ fontSize: 13.5, color: t.inkSoft, marginTop: 6, lineHeight: 1.55, fontFamily: t.fontBody }}>
-                            This permanently removes "{deck.name}" and all {words.length} words. This action can't be undone.
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 9, marginTop: 20 }}>
-                            <button
-                                onClick={() => setShowDeleteDeck(false)}
-                                style={{ padding: "9px 16px", borderRadius: t.radius, border: `1px solid ${t.border}`, background: t.surface, color: t.ink, fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: t.fontBody }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDeleteDeck}
-                                style={{ padding: "9px 16px", borderRadius: t.radius, border: "none", background: t.danger, color: t.popInk, fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: t.fontBody }}
-                            >
-                                Delete deck
-                            </button>
-                        </div>
+                <ModalShell onClose={() => setShowDeleteDeck(false)} maxWidth={420}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: t.dangerSoft, display: "flex", alignItems: "center", justifyContent: "center", color: t.danger, marginBottom: 14 }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        </svg>
                     </div>
-                </div>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: t.ink, fontFamily: t.fontHead }}>Delete this deck?</div>
+                    <div style={{ fontSize: 13.5, color: t.inkSoft, marginTop: 6, lineHeight: 1.55, fontFamily: t.fontBody }}>
+                        This permanently removes "{deck.name}" and all {words.length} words. This action can't be undone.
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 9, marginTop: 20 }}>
+                        <button
+                            onClick={() => setShowDeleteDeck(false)}
+                            style={{ padding: "9px 16px", borderRadius: t.radius, border: `1px solid ${t.border}`, background: t.surface, color: t.ink, fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: t.fontBody }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleDeleteDeck}
+                            style={{ padding: "9px 16px", borderRadius: t.radius, border: "none", background: t.danger, color: t.popInk, fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: t.fontBody }}
+                        >
+                            Delete deck
+                        </button>
+                    </div>
+                </ModalShell>
             )}
 
             {/* Toast */}

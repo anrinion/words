@@ -8,6 +8,7 @@ import { settingsApi } from '../../api/settings'
 import { wordsApi } from '../../api/words'
 import { useSessionContext } from '../../contexts/SessionContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { TrainButton } from '../../components/TrainButton'
 import Preview from './Preview'
 import RoundView from './RoundView'
 import SelfCheck from './SelfCheck'
@@ -208,17 +209,6 @@ export default function Train() {
 
   if (state.status === 'idle') {
     const pad: CSSProperties = { padding: '26px 22px 60px', maxWidth: 680, margin: '0 auto', width: '100%' }
-    const primaryBtn: CSSProperties = {
-      width: '100%', padding: 15, borderRadius: 14, border: 'none',
-      background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
-      cursor: 'pointer', fontFamily: t.fontBody, marginTop: 10,
-      boxShadow: `0 2px 8px ${t.pop}46`,
-    }
-    const secondaryBtn: CSSProperties = {
-      ...primaryBtn, background: t.surface, color: t.ink,
-      border: `1px solid ${t.border}`, boxShadow: 'none',
-    }
-    const disabledPrimary: CSSProperties = { ...primaryBtn, opacity: 0.5, pointerEvents: 'none' }
 
     if (state.emptyReason) {
       return (
@@ -226,7 +216,7 @@ export default function Train() {
           <p style={{ fontSize: 36, marginBottom: 12 }}>🔍</p>
           <p style={{ fontFamily: t.fontHead, fontSize: 18, fontWeight: 600, color: t.ink, marginBottom: 6 }}>Nothing to review</p>
           <p style={{ fontFamily: t.fontBody, fontSize: 14, color: t.inkSoft, marginBottom: 24 }}>{state.emptyReason}</p>
-          <button onClick={() => setState({ status: 'idle' })} style={secondaryBtn}>Back</button>
+          <TrainButton variant="secondary" onClick={() => setState({ status: 'idle' })} style={{ marginTop: 10 }}>Back</TrainButton>
         </div>
       )
     }
@@ -395,12 +385,13 @@ export default function Train() {
               </div>
             </div>
 
-            <button
+            <TrainButton
               onClick={() => startSession('normal')}
-              style={settings ? primaryBtn : disabledPrimary}
+              disabled={!settings}
+              style={{ marginTop: 10 }}
             >
               {t.startCta} →
-            </button>
+            </TrainButton>
             <button
               onClick={() => startSession('review')}
               style={{

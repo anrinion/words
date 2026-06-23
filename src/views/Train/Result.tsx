@@ -1,6 +1,8 @@
 import { useState, CSSProperties } from 'react'
 import type { Word } from '@shared/types'
 import { useTheme } from '../../contexts/ThemeContext'
+import PhaseShell from '../../components/PhaseShell'
+import { TrainButton } from '../../components/TrainButton'
 
 interface ExamAnswer {
   wordId: string
@@ -49,12 +51,6 @@ export default function Result({
     solidCount >= 1 ? 'Good start — that\'s how it builds.' :
     'You showed up — that\'s the hard part.'
 
-  const doneBtn: CSSProperties = {
-    width: '100%', padding: 15, borderRadius: 14, border: 'none',
-    background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
-    cursor: 'pointer', fontFamily: t.fontBody, marginTop: 28,
-    boxShadow: `0 2px 8px ${t.pop}46`,
-  }
   const wordRow = (i: number, tint?: string): CSSProperties => ({
     display: 'grid', gridTemplateColumns: '1fr 1fr',
     alignItems: 'center', gap: 12, padding: '12px 16px',
@@ -62,7 +58,7 @@ export default function Result({
   })
 
   return (
-    <div style={{ padding: '26px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
+    <PhaseShell topPadding={26}>
 
       {/* Hero */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -160,7 +156,7 @@ export default function Result({
         </div>
       )}
 
-      <button onClick={onDone} style={doneBtn}>Done</button>
-    </div>
+      <TrainButton onClick={onDone} style={{ marginTop: 28 }}>Done</TrainButton>
+    </PhaseShell>
   )
 }

@@ -1,6 +1,8 @@
-import { useState, CSSProperties } from 'react'
+import { useState } from 'react'
 import type { Word } from '@shared/types'
 import { useTheme } from '../../contexts/ThemeContext'
+import PhaseShell from '../../components/PhaseShell'
+import { TrainButton } from '../../components/TrainButton'
 
 // ── Desktop: typed input ──────────────────────────────────────────────────────
 
@@ -21,20 +23,8 @@ export default function Exam({
     onSubmit(answers)
   }
 
-  const inputStyle: CSSProperties = {
-    width: '100%', padding: '7px 11px', border: `1px solid ${t.border}`,
-    borderRadius: 8, fontSize: 14.5, fontWeight: 600,
-    background: t.surface, color: t.ink, outline: 'none',
-    fontFamily: t.fontBody,
-  }
-
   return (
-    <div style={{ padding: '18px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
-      <h2 style={{ fontSize: 23, fontWeight: 700, color: t.ink, margin: 0, fontFamily: t.fontHead }}>Recall</h2>
-      <p style={{ fontSize: 14.5, color: t.inkSoft, margin: '6px 0 20px', lineHeight: 1.5, fontFamily: t.fontBody }}>
-        Type what you remember. Unsure about one? Leave it blank and move on — those just become tomorrow's practice.
-      </p>
-
+    <PhaseShell title="Recall" subtitle="Type what you remember. Unsure about one? Leave it blank and move on — those just become tomorrow's practice.">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => (
           <div
@@ -54,7 +44,7 @@ export default function Exam({
               value={answers[word.id] ?? ''}
               onChange={e => setAnswers(prev => ({ ...prev, [word.id]: e.target.value }))}
               placeholder="type the word…"
-              style={inputStyle}
+              className="input" style={{ fontWeight: 600 }}
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
@@ -63,24 +53,14 @@ export default function Exam({
         ))}
       </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={submitted}
-        style={{
-          width: '100%', padding: 15, borderRadius: 14, border: 'none',
-          background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
-          cursor: submitted ? 'not-allowed' : 'pointer', fontFamily: t.fontBody,
-          marginTop: 18, boxShadow: `0 2px 8px ${t.pop}46`,
-          opacity: submitted ? 0.7 : 1,
-        }}
-      >
+      <TrainButton onClick={handleSubmit} disabled={submitted} style={{ marginTop: 18 }}>
         {submitted ? 'Submitting…' : 'See how I did →'}
-      </button>
+      </TrainButton>
 
       <p style={{ textAlign: 'center', fontSize: 13, color: t.inkFaint, margin: '12px 0 0', fontFamily: t.fontBody }}>
         Blanks just mean we'll revisit those together — that's the point.
       </p>
-    </div>
+    </PhaseShell>
   )
 }
 
@@ -116,12 +96,7 @@ export function ExamCheck({
   }
 
   return (
-    <div style={{ padding: '18px 22px 80px', maxWidth: 680, margin: '0 auto', width: '100%' }}>
-      <h2 style={{ fontSize: 23, fontWeight: 700, color: t.ink, margin: 0, fontFamily: t.fontHead }}>Mark your results</h2>
-      <p style={{ fontSize: 14.5, color: t.inkSoft, margin: '6px 0 20px', fontFamily: t.fontBody }}>
-        Tick every word you recalled. Be honest with yourself.
-      </p>
-
+    <PhaseShell title="Mark your results" subtitle="Tick every word you recalled. Be honest with yourself.">
       <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 16, overflow: 'hidden' }}>
         {order.map((word, i) => {
           const isChecked = checked.has(word.id)
@@ -164,19 +139,9 @@ export function ExamCheck({
         {checked.size} of {order.length} recalled
       </p>
 
-      <button
-        onClick={handleSubmit}
-        disabled={submitted}
-        style={{
-          width: '100%', padding: 15, borderRadius: 14, border: 'none',
-          background: t.pop, color: t.popInk, fontSize: 15, fontWeight: 700,
-          cursor: submitted ? 'not-allowed' : 'pointer', fontFamily: t.fontBody,
-          marginTop: 10, boxShadow: `0 2px 8px ${t.pop}46`,
-          opacity: submitted ? 0.7 : 1,
-        }}
-      >
+      <TrainButton onClick={handleSubmit} disabled={submitted} style={{ marginTop: 10 }}>
         {submitted ? 'Submitting…' : 'Done'}
-      </button>
-    </div>
+      </TrainButton>
+    </PhaseShell>
   )
 }
